@@ -1,0 +1,15 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "references": {
+    "opencode-pr-reviewer-code": {
+      "repository": "Barmore-Genc/opencode-pr-reviewer",
+      "branch": "main",
+      "description": "A GitHub Action that runs an opencode-powered code review on a pull request and posts the verdict as a single comment that's edited as the run progresses."
+    },
+    "opencode-code": {
+      "repository": "anomalyco/opencode",
+      "branch": "dev",
+      "description": "OpenCode is an open source agent that helps you write code in your terminal, IDE, or desktop."
+    }
+  }
+}
