@@ -11,5 +11,6 @@
       "branch": "dev",
       "description": "OpenCode is an open source agent that helps you write code in your terminal, IDE, or desktop."
     }
-  }
+  },
+  "instructions": ["agent-rules/project.md"]
 }

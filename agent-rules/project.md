@@ -32,3 +32,6 @@ commit message
 - Footer（脚注），通常用于两种情况
   - 不兼容变动（Breaking Change）：如果代码改动导致之前的 API 无法使用，以 BREAKING CHANGE: 开头，后面跟说明。
   - 关闭 Issue：如果关联了需求或 Bug 管理系统，写上 Closes #12345 或 Fixes #67890
+
+注意事项
+- 任何情况下，在执行`git commit`时，**不要**添加`--amend`参数
