@@ -1,0 +1,17 @@
+{
+  "name": "@gh-action-bundles/shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared utilities for gh-action-bundles actions",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "lint": "tsc --noEmit",
+    "test": "node --test dist/**/*.test.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.4.0"
+  }
+}

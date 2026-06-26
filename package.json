@@ -1,0 +1,22 @@
+{
+  "name": "gh-action-bundles",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A collection of reusable GitHub Composite Actions for project automation",
+  "scripts": {
+    "build": "pnpm -r build",
+    "build:shared": "pnpm --filter @gh-action-bundles/shared build",
+    "build:ocr-review": "pnpm --filter ocr-review build",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "esbuild": "^0.21.0",
+    "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  }
+}

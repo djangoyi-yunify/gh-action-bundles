@@ -1,0 +1,115 @@
+name: 'OCR Review'
+description: 'Run alibaba/open-code-review on a Pull Request and post review comments'
+branding:
+  icon: 'code'
+  color: 'blue'
+
+inputs:
+  llm-url:
+    description: 'LLM API endpoint URL'
+    required: true
+  llm-token:
+    description: 'LLM API authentication token'
+    required: true
+  llm-model:
+    description: 'LLM model name, e.g. gpt-4o'
+    required: true
+  pr-number:
+    description: 'Pull request number to review'
+    required: true
+  github-token:
+    description: 'GitHub token for posting PR review comments'
+    required: true
+    default: ${{ github.token }}
+  ocr-version:
+    description: 'Version of @alibaba-group/open-code-review to install'
+    required: false
+    default: 'latest'
+  use-anthropic:
+    description: 'Set to true if using Anthropic Claude models'
+    required: false
+    default: 'false'
+  extra-body:
+    description: 'Extra JSON body merged into LLM requests'
+    required: false
+    default: '{"thinking": {"type": "disabled"}}'
+  rule-path:
+    description: 'Path to custom OCR rule JSON file, relative to repository root'
+    required: false
+    default: ''
+  exclude:
+    description: 'Comma-separated gitignore-style patterns to exclude from review'
+    required: false
+    default: ''
+  concurrency:
+    description: 'Max concurrent file reviews'
+    required: false
+    default: '8'
+  timeout:
+    description: 'Concurrent task timeout in minutes'
+    required: false
+    default: '10'
+  background:
+    description: 'Optional business/requirement context for the review'
+    required: false
+    default: ''
+
+outputs:
+  review-count:
+    description: 'Total number of review comments generated'
+  inline-count:
+    description: 'Number of comments posted as inline PR review comments'
+  summary-count:
+    description: 'Number of comments included in the summary'
+  failed-count:
+    description: 'Number of comments that failed to post'
+
+runs:
+  using: composite
+  steps:
+    - name: Install OpenCodeReview
+      shell: bash
+      run: node "${{ github.action_path }}/dist/install.js"
+      env:
+        OCR_VERSION: ${{ inputs.ocr-version }}
+
+    - name: Configure LLM
+      shell: bash
+      run: node "${{ github.action_path }}/dist/configure.js"
+      env:
+        OCR_LLM_URL: ${{ inputs.llm-url }}
+        OCR_LLM_TOKEN: ${{ inputs.llm-token }}
+        OCR_LLM_MODEL: ${{ inputs.llm-model }}
+        OCR_USE_ANTHROPIC: ${{ inputs.use-anthropic }}
+        OCR_EXTRA_BODY: ${{ inputs.extra-body }}
+
+    - name: Resolve PR context
+      id: resolve-pr
+      shell: bash
+      run: node "${{ github.action_path }}/dist/resolve-pr.js"
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        PR_NUMBER: ${{ inputs.pr-number }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+
+    - name: Run review
+      shell: bash
+      run: node "${{ github.action_path }}/dist/run-review.js"
+      env:
+        OCR_BASE_REF: ${{ steps.resolve-pr.outputs.base-ref }}
+        OCR_HEAD_SHA: ${{ steps.resolve-pr.outputs.head-sha }}
+        RULE_PATH: ${{ inputs.rule-path }}
+        EXCLUDE: ${{ inputs.exclude }}
+        CONCURRENCY: ${{ inputs.concurrency }}
+        TIMEOUT: ${{ inputs.timeout }}
+        BACKGROUND: ${{ inputs.background }}
+
+    - name: Post review comments
+      if: always()
+      shell: bash
+      run: node "${{ github.action_path }}/dist/post-review.js"
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        PR_NUMBER: ${{ inputs.pr-number }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        OCR_HEAD_SHA: ${{ steps.resolve-pr.outputs.head-sha }}
