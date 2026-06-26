@@ -42,5 +42,5 @@
 ## 7. Verification
 
 - [x] 7.1 Validate `action.yml` syntax with `actionlint` or GitHub Actions schema
-- [ ] 7.2 Run a test workflow against a sample PR (if environment permits)
+- [x] 7.2 Run a test workflow against a sample PR (if environment permits)
 - [x] 7.3 Review and finalize all generated artifacts
