@@ -38,11 +38,49 @@
 5. 运行 `opencode github run`
 6. 通过环境变量传入所有 inputs
 
-### 3.3 配套 Workflow
+### 3.3 Action 文档中的使用示例
 
-官方仓库的 `.github/workflows/opencode.yml` 在 `issue_comment` 和 `pull_request_review_comment` 事件触发，workflow 层匹配 `/oc` 或 `/opencode` 触发词，然后调用 action。
+`github/action.yml` 的配套文档是 `github/README.md`，其中提供了手动设置的 workflow 示例：
 
-特点：触发词匹配在 workflow 层完成，action 内部处理多种事件类型。
+```yaml
+name: opencode
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+
+jobs:
+  opencode:
+    if: |
+      contains(github.event.comment.body, '/oc') ||
+      contains(github.event.comment.body, '/opencode')
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Run opencode
+        uses: anomalyco/opencode/github@latest
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          model: anthropic/claude-sonnet-4-20250514
+          use_github_token: true
+```
+
+特点：
+
+- 触发词匹配在 workflow 层完成
+- action 本身不绑定特定事件，调用方 workflow 决定触发条件
+- action 内部通过 `opencode github run` 处理事件路由和 prompt 构建
 
 ## 4. opencode-pr-reviewer `action.yml`
 
@@ -84,21 +122,33 @@
 | 定位 | 通用 GitHub Agent | 专用 PR Reviewer |
 | Action 类型 | composite | composite |
 | 入口命令 | `opencode github run` | `opencode run --model <model> "<prompt>"` |
-| 触发事件 | issue_comment, pull_request_review_comment | pull_request, issue_comment |
+| 示例触发事件 | issue_comment, pull_request_review_comment（由示例 workflow 决定） | pull_request, issue_comment（由示例 workflow 决定） |
+| action 内部支持事件 | issue_comment, pull_request_review_comment, issues, pull_request, schedule, workflow_dispatch | 任意事件，只要传入 pr-number |
 | 认证方式 | OIDC 换 App token 或 GITHUB_TOKEN | 直接使用 GITHUB_TOKEN |
 | 权限控制 | 运行时由 agent config / env 决定 | 预生成严格只读 config |
 | 配置注入 | 环境变量 | `/tmp/opencode-config.json` 文件 |
 | Prompt 构建 | TypeScript handler | bash 脚本 |
 | 输出方式 | 模型响应直接发布 | 模型写入文件，post 脚本发布 |
 | 安全配置 | 较轻 | 很重：删项目 config、bash 白名单、禁用 web/task/external |
-| 作者身份过滤 | 无 | 示例限制为 OWNER/MEMBER/COLLABORATOR |
+| 示例中的作者身份过滤 | 无 | 限制为 OWNER/MEMBER/COLLABORATOR |
 | 版本管理 | 运行时获取 latest 并缓存 | input 可固定版本 |
 
-## 6. opencode 官方仓库的另一实现
+## 6. opencode 官方项目自身的其他工作流
 
-官方仓库的 `.github/workflows/review.yml` 没有使用 `github/action.yml`，而是直接调用 `opencode run -m ... "prompt"`，内联了一个自定义 review prompt，并让模型用 `gh cli` 创建 PR review comments。
+opencode 官方项目内部还有 `.github/workflows/review.yml` 等工作流。这些工作流**没有使用** `github/action.yml`，而是直接调用 `opencode run`：
 
-这说明 composite action 不是唯一选择，高度定制化场景可以直接在 workflow 中调用 CLI。
+```yaml
+run: |
+  opencode run -m opencode/gpt-5.5 --variant medium "A new pull request has been created: ...
+  ...
+  Use the gh cli to create comments on the files for the violations."
+```
+
+这属于项目内部定制化 workflow，不是 `github/action.yml` 的用法。它说明：
+
+- composite action 不是唯一选择
+- 高度定制化的场景可以直接在 workflow 中调用 CLI
+- 项目内部 workflow 和对外发布的 action 可以共存
 
 ## 7. 两种实现思路总结
 
