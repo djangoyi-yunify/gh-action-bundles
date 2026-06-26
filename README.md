@@ -1,4 +1,4 @@
-# gh-action-opencode-preview
+# gh-action-bundles
 
 ## 参考资料
 
