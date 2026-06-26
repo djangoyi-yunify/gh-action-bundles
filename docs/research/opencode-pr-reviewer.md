@@ -329,9 +329,12 @@ Structure the file like this — sections delimited by `### ` headings:
 
 ## 6. 与 opencode 官方 `github run` 的对比
 
+> 重要前提：**composite action 本身不定义触发事件**。`action.yml` 中没有 `on:` 部分，触发条件完全由调用方 workflow 决定。下面表格中的"典型使用场景"指的是示例 workflow 中的触发事件，不是 action 本身的属性。
+
 | 维度 | opencode-pr-reviewer | opencode 官方路径 B |
 |------|---------------------|-------------------|
-| 触发事件 | `pull_request` + `issue_comment` | `issue_comment`, `pull_request_review_comment`, `issues`, `pull_request`, `schedule`, `workflow_dispatch` |
+| action 是否定义触发事件 | 否。`action.yml` 没有 `on:` 部分 | 否。`action.yml` 没有 `on:` 部分 |
+| 典型使用场景 | 调用方 workflow 通常在 `pull_request` 或 `issue_comment` 事件触发 | 调用方 workflow 通常在 `issue_comment` 或 `pull_request_review_comment` 事件触发 |
 | 数据工具 | `gh CLI` | `Octokit` REST + GraphQL |
 | 提示词构建 | bash 脚本硬编码拼接 | TypeScript `buildPromptDataForPR/Issue` |
 | 角色设定 | 固定 "Review Bot" | 使用配置中的 agent（默认 `build`） |
