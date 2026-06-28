@@ -123,16 +123,24 @@ The action's example workflow SHALL support a comment command that allows truste
 - **WHEN** a user with any other `author_association` comments `/ocr review`
 - **THEN** the `issue_comment` workflow is skipped
 
-### Requirement: Comment-triggered workflows checkout PR head
-The action's example workflow SHALL checkout the PR head branch when triggered by an `issue_comment` event.
+### Requirement: Action checks out the repository and the correct PR head branch
+The action SHALL fetch the repository and check out the head branch of the pull request before running OCR, supporting both same-repo and fork PRs.
 
-#### Scenario: Manual review of same-repo PR
-- **WHEN** `/ocr review` is commented on a same-repository PR
-- **THEN** the workflow checks out the PR head before running OCR
+#### Scenario: Same-repo PR is checked out automatically
+- **WHEN** the action is invoked for a same-repo PR
+- **THEN** it fetches `origin/<head-ref-name>` and checks out the head branch
 
-#### Scenario: Manual review of fork PR
-- **WHEN** `/ocr review` is commented on a fork PR
-- **THEN** the workflow checks out the PR head before running OCR
+#### Scenario: Fork PR is checked out automatically
+- **WHEN** the action is invoked for a fork PR
+- **THEN** it adds the fork repository as a remote, fetches the head branch from the fork, and checks it out locally
+
+#### Scenario: Caller can disable automatic checkout
+- **WHEN** the action is invoked with `auto-checkout: false`
+- **THEN** the action does not perform any checkout and relies on the caller's existing workspace
+
+#### Scenario: Checkout is skipped for non-PR events
+- **WHEN** the action is triggered by an event other than `pull_request` or `issue_comment`
+- **THEN** the checkout step completes without modifying the workspace
 
 ### Requirement: Documentation explains the security model
 The action's README SHALL document why fork PRs are not automatically reviewed and how to trigger them manually.
