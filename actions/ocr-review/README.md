@@ -139,6 +139,10 @@ Place a rule file at `.opencodereview/rule.json` in your repository, or pass a c
 
 See the [OCR rule documentation](https://github.com/alibaba/open-code-review#review-rules) for the rule file format.
 
+## Known limitations
+
+- OCR may fail to review **newly added files** in a PR (files that do not exist on the base branch). In this case the action posts a summary comment such as `[OCR] produced no output` and the underlying `ocr review` command exits with an error. This behavior was observed during structured end-to-end testing and may depend on the OCR version or LLM provider.
+
 ## Security model
 
 This workflow deliberately uses `pull_request` rather than `pull_request_target` as the default event.
