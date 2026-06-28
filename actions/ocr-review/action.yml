@@ -53,6 +53,10 @@ inputs:
     description: 'Optional business/requirement context for the review'
     required: false
     default: ''
+  identifier:
+    description: 'Optional identifier prepended to review comments to distinguish multiple review actions'
+    required: false
+    default: ''
 
 outputs:
   review-count:
@@ -113,3 +117,4 @@ runs:
         PR_NUMBER: ${{ inputs.pr-number }}
         GITHUB_REPOSITORY: ${{ github.repository }}
         OCR_HEAD_SHA: ${{ steps.resolve-pr.outputs.head-sha }}
+        IDENTIFIER: ${{ inputs.identifier }}

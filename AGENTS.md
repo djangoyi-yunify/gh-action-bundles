@@ -99,3 +99,11 @@ buildAction();
 - 所有 Action 的 esbuild target 为 `node24`
 - `@types/node` 使用与 Node 24 对齐的版本
 - GitHub Actions runner 使用 `ubuntu-latest` 或自带 Node 24 的环境
+
+### Workflow 安全模式
+
+- 默认推荐使用 `pull_request` + `issue_comment` 组合事件
+- 必须配合 `author_association` 门禁（`OWNER` / `MEMBER` / `COLLABORATOR`）控制自动触发
+- 外部贡献者发起的 fork PR 不会自动触发 workflow，避免 secrets 泄露和 token 浪费
+- 仓库维护者可通过评论指令（如 `/ocr review`）手动触发任意 PR 的 review
+- 如需自动 review 任意 fork PR，可改用 `pull_request_target`，但必须充分理解其安全风险

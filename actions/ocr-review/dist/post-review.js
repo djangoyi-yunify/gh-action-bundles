@@ -414,10 +414,17 @@ var import_shared = __toESM(require_dist());
 var import_fs = require("fs");
 var RESULT_PATH = "/tmp/ocr-result.json";
 var STDERR_PATH = "/tmp/ocr-stderr.log";
+function prefixIdentifier(body, identifier) {
+  if (!identifier) {
+    return body;
+  }
+  return `[${identifier}] ${body}`;
+}
 async function main() {
   const repo = (0, import_shared.getEnv)("GITHUB_REPOSITORY");
   const prNumber = parseInt((0, import_shared.getEnv)("PR_NUMBER"), 10);
   const token = (0, import_shared.getEnv)("GITHUB_TOKEN");
+  const identifier = (0, import_shared.getEnv)("IDENTIFIER", false) || "";
   let resultRaw = "";
   try {
     resultRaw = (0, import_fs.readFileSync)(RESULT_PATH, "utf8");
@@ -433,7 +440,7 @@ async function main() {
       }
     } catch {
     }
-    await (0, import_shared.createIssueComment)(repo, prNumber, token, body);
+    await (0, import_shared.createIssueComment)(repo, prNumber, token, prefixIdentifier(body, identifier));
     (0, import_shared.setOutput)("review-count", "0");
     (0, import_shared.setOutput)("inline-count", "0");
     (0, import_shared.setOutput)("summary-count", "0");
@@ -452,11 +459,19 @@ async function main() {
       }
     } catch {
     }
-    await (0, import_shared.createIssueComment)(repo, prNumber, token, body);
+    await (0, import_shared.createIssueComment)(repo, prNumber, token, prefixIdentifier(body, identifier));
     throw error;
   }
   const comments = result.comments || [];
   const { inline, summary } = (0, import_shared.splitComments)(comments);
+  if (identifier) {
+    for (const comment of inline) {
+      comment.body = prefixIdentifier(comment.body, identifier);
+    }
+    for (const comment of summary) {
+      comment.content = prefixIdentifier(comment.content, identifier);
+    }
+  }
   let inlineCount = 0;
   let summaryCount = summary.length;
   let failedCount = 0;
@@ -481,13 +496,14 @@ async function main() {
   }
   if (summary.length > 0 || result.message && result.message.trim() !== "") {
     const totalCount = comments.length;
-    const body = (0, import_shared.buildSummaryBody)(
+    let body = (0, import_shared.buildSummaryBody)(
       totalCount,
       inlineCount,
       summaryCount,
       result.message || "",
       summary
     );
+    body = prefixIdentifier(body, identifier);
     await (0, import_shared.createIssueComment)(repo, prNumber, token, body);
   }
   (0, import_shared.setOutput)("review-count", String(comments.length));

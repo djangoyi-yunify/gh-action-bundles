@@ -14,10 +14,18 @@ import { readFileSync } from 'fs';
 const RESULT_PATH = '/tmp/ocr-result.json';
 const STDERR_PATH = '/tmp/ocr-stderr.log';
 
+function prefixIdentifier(body: string, identifier: string): string {
+  if (!identifier) {
+    return body;
+  }
+  return `[${identifier}] ${body}`;
+}
+
 async function main(): Promise<void> {
   const repo = getEnv('GITHUB_REPOSITORY');
   const prNumber = parseInt(getEnv('PR_NUMBER'), 10);
   const token = getEnv('GITHUB_TOKEN');
+  const identifier = getEnv('IDENTIFIER', false) || '';
 
   let resultRaw = '';
   try {
@@ -36,7 +44,7 @@ async function main(): Promise<void> {
     } catch {
       // ignore
     }
-    await createIssueComment(repo, prNumber, token, body);
+    await createIssueComment(repo, prNumber, token, prefixIdentifier(body, identifier));
     setOutput('review-count', '0');
     setOutput('inline-count', '0');
     setOutput('summary-count', '0');
@@ -57,12 +65,21 @@ async function main(): Promise<void> {
     } catch {
       // ignore
     }
-    await createIssueComment(repo, prNumber, token, body);
+    await createIssueComment(repo, prNumber, token, prefixIdentifier(body, identifier));
     throw error;
   }
 
   const comments = result.comments || [];
   const { inline, summary } = splitComments(comments);
+
+  if (identifier) {
+    for (const comment of inline) {
+      comment.body = prefixIdentifier(comment.body, identifier);
+    }
+    for (const comment of summary) {
+      comment.content = prefixIdentifier(comment.content, identifier);
+    }
+  }
 
   let inlineCount = 0;
   let summaryCount = summary.length;
@@ -91,13 +108,14 @@ async function main(): Promise<void> {
 
   if (summary.length > 0 || (result.message && result.message.trim() !== '')) {
     const totalCount = comments.length;
-    const body = buildSummaryBody(
+    let body = buildSummaryBody(
       totalCount,
       inlineCount,
       summaryCount,
       result.message || '',
       summary
     );
+    body = prefixIdentifier(body, identifier);
     await createIssueComment(repo, prNumber, token, body);
   }
 
