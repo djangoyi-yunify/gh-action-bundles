@@ -28,10 +28,10 @@
 
 ## 5. Verify Same-Repo PR Auto-Review
 
-- [ ] 5.1 Open or update a same-repo PR
-- [ ] 5.2 Confirm workflow runs and posts review comments with identifier prefix
+- [x] 5.1 Open or update a same-repo PR
+- [x] 5.2 Confirm workflow runs and posts review comments with identifier prefix
 
 ## 6. Verify Comment Trigger
 
-- [ ] 6.1 Comment `/ocr review` on a PR
-- [ ] 6.2 Confirm workflow runs and posts review comments with identifier prefix
+- [x] 6.1 Comment `/ocr review` on a PR
+- [x] 6.2 Confirm workflow runs and posts review comments with identifier prefix
