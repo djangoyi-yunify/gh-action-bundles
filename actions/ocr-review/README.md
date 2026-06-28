@@ -43,18 +43,6 @@ jobs:
       )
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Checkout PR head for comment triggers
-        if: github.event_name == 'issue_comment'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh pr checkout "${{ github.event.issue.number }}"
-
       - name: Run OCR review
         uses: your-org/gh-action-bundles/actions/ocr-review@main
         with:
@@ -83,6 +71,7 @@ jobs:
 | `timeout` | no | `10` | Concurrent task timeout in minutes |
 | `background` | no | - | Optional business/requirement context for the review |
 | `identifier` | no | - | Optional identifier prepended to review comments to distinguish multiple review actions |
+| `auto-checkout` | no | `true` | Let the action checkout the repository and PR head branch; set to `false` if the caller already checked out the code |
 
 ## Outputs
 
@@ -97,8 +86,9 @@ jobs:
 
 1. Installs the `@alibaba-group/open-code-review` npm package globally.
 2. Configures the OCR LLM provider via `ocr config set`.
-3. Uses `gh pr view` to infer the PR base branch and head SHA.
-4. Runs `ocr review --from origin/<base> --to <head> --format json`.
+3. Checks out the repository and the PR head branch (same-repo or fork).
+4. Uses `gh pr view` to infer the PR base branch and head SHA.
+5. Runs `ocr review --from <merge-base> --to <head> --format json`.
 5. Parses the JSON output and posts inline review comments via GitHub's PR review API.
 6. Comments that cannot be posted inline are included in a summary issue comment.
 7. If `identifier` is provided, every comment body is prefixed with `[{identifier}] `.

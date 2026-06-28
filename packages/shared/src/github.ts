@@ -132,6 +132,39 @@ export async function getMergeBase(
   return data.merge_base_commit.sha as string;
 }
 
+export interface PullRequestCheckoutInfo {
+  headRefName: string;
+  headRepository: { nameWithOwner: string };
+  isCrossRepository: boolean;
+  commitCount: number;
+}
+
+export async function getPullRequestCheckoutInfo(
+  repo: string,
+  prNumber: number,
+  token: string
+): Promise<PullRequestCheckoutInfo> {
+  const { stdout } = await execCapture('gh', [
+    'pr',
+    'view',
+    String(prNumber),
+    '--repo',
+    repo,
+    '--json',
+    'headRefName,headRepository,isCrossRepository,commits',
+  ], {
+    env: { GH_TOKEN: token },
+  });
+
+  const data = JSON.parse(stdout);
+  return {
+    headRefName: data.headRefName,
+    headRepository: data.headRepository,
+    isCrossRepository: data.isCrossRepository,
+    commitCount: Array.isArray(data.commits) ? data.commits.length : 0,
+  };
+}
+
 export function parseRepo(repository: string): { owner: string; repo: string } {
   const [owner, repoName] = repository.split('/');
   if (!owner || !repoName) {

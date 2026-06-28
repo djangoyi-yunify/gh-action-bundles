@@ -20,6 +20,15 @@ export declare function getPullRequest(repo: string, prNumber: number, token: st
     headSha: string;
 }>;
 export declare function getMergeBase(repo: string, baseRef: string, headSha: string, token: string): Promise<string>;
+export interface PullRequestCheckoutInfo {
+    headRefName: string;
+    headRepository: {
+        nameWithOwner: string;
+    };
+    isCrossRepository: boolean;
+    commitCount: number;
+}
+export declare function getPullRequestCheckoutInfo(repo: string, prNumber: number, token: string): Promise<PullRequestCheckoutInfo>;
 export declare function parseRepo(repository: string): {
     owner: string;
     repo: string;

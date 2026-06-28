@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "Composite Action for PR code review using alibaba/open-code-review",
-  "action-steps": ["install", "configure", "resolve-pr", "run-review", "post-review"],
+  "action-steps": ["install", "configure", "checkout", "resolve-pr", "run-review", "post-review"],
   "scripts": {
     "build": "node build.js",
     "lint": "tsc --noEmit"

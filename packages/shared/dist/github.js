@@ -38,6 +38,7 @@ exports.createPullRequestReview = createPullRequestReview;
 exports.createIssueComment = createIssueComment;
 exports.getPullRequest = getPullRequest;
 exports.getMergeBase = getMergeBase;
+exports.getPullRequestCheckoutInfo = getPullRequestCheckoutInfo;
 exports.parseRepo = parseRepo;
 const exec_1 = require("./exec");
 async function getPullRequestContext(repo, prNumber, token) {
@@ -124,6 +125,26 @@ async function getMergeBase(repo, baseRef, headSha, token) {
         throw new Error(`Could not determine merge base for ${baseRef}...${headSha}`);
     }
     return data.merge_base_commit.sha;
+}
+async function getPullRequestCheckoutInfo(repo, prNumber, token) {
+    const { stdout } = await (0, exec_1.execCapture)('gh', [
+        'pr',
+        'view',
+        String(prNumber),
+        '--repo',
+        repo,
+        '--json',
+        'headRefName,headRepository,isCrossRepository,commits',
+    ], {
+        env: { GH_TOKEN: token },
+    });
+    const data = JSON.parse(stdout);
+    return {
+        headRefName: data.headRefName,
+        headRepository: data.headRepository,
+        isCrossRepository: data.isCrossRepository,
+        commitCount: Array.isArray(data.commits) ? data.commits.length : 0,
+    };
 }
 function parseRepo(repository) {
     const [owner, repoName] = repository.split('/');

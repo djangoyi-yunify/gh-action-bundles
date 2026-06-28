@@ -57,6 +57,10 @@ inputs:
     description: 'Optional identifier prepended to review comments to distinguish multiple review actions'
     required: false
     default: ''
+  auto-checkout:
+    description: 'Whether the action should automatically checkout the repository and PR head branch'
+    required: false
+    default: 'true'
 
 outputs:
   review-count:
@@ -86,6 +90,24 @@ runs:
         OCR_LLM_MODEL: ${{ inputs.llm-model }}
         OCR_USE_ANTHROPIC: ${{ inputs.use-anthropic }}
         OCR_EXTRA_BODY: ${{ inputs.extra-body }}
+
+    - name: Checkout repository
+      if: inputs.auto-checkout == 'true'
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+
+    - name: Checkout PR head
+      if: inputs.auto-checkout == 'true'
+      shell: bash
+      run: node "${{ github.action_path }}/dist/checkout.js"
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        PR_NUMBER: ${{ inputs.pr-number }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        GITHUB_EVENT_NAME: ${{ github.event_name }}
+        AUTO_CHECKOUT: ${{ inputs.auto-checkout }}
 
     - name: Resolve PR context
       id: resolve-pr

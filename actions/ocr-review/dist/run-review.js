@@ -212,6 +212,7 @@ var require_github = __commonJS({
     exports2.createIssueComment = createIssueComment;
     exports2.getPullRequest = getPullRequest;
     exports2.getMergeBase = getMergeBase;
+    exports2.getPullRequestCheckoutInfo = getPullRequestCheckoutInfo;
     exports2.parseRepo = parseRepo;
     var exec_1 = require_exec();
     async function getPullRequestContext(repo, prNumber, token) {
@@ -295,6 +296,26 @@ var require_github = __commonJS({
         throw new Error(`Could not determine merge base for ${baseRef}...${headSha}`);
       }
       return data.merge_base_commit.sha;
+    }
+    async function getPullRequestCheckoutInfo(repo, prNumber, token) {
+      const { stdout } = await (0, exec_1.execCapture)("gh", [
+        "pr",
+        "view",
+        String(prNumber),
+        "--repo",
+        repo,
+        "--json",
+        "headRefName,headRepository,isCrossRepository,commits"
+      ], {
+        env: { GH_TOKEN: token }
+      });
+      const data = JSON.parse(stdout);
+      return {
+        headRefName: data.headRefName,
+        headRepository: data.headRepository,
+        isCrossRepository: data.isCrossRepository,
+        commitCount: Array.isArray(data.commits) ? data.commits.length : 0
+      };
     }
     function parseRepo(repository) {
       const [owner, repoName] = repository.split("/");

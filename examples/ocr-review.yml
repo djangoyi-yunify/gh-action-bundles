@@ -37,18 +37,6 @@ jobs:
         )
       )
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Checkout PR head for comment triggers
-        if: github.event_name == 'issue_comment'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh pr checkout "${{ github.event.issue.number }}"
-
       - name: Run OCR review
         uses: your-org/gh-action-bundles/actions/ocr-review@main
         with:

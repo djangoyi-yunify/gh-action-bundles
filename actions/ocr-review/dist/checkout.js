@@ -58,11 +58,11 @@ var require_exec = __commonJS({
   "../../packages/shared/dist/exec.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.exec = exec;
+    exports2.exec = exec2;
     exports2.execCapture = execCapture;
     var child_process_1 = require("child_process");
     var log_1 = require_log();
-    function exec(command, args = [], options = {}) {
+    function exec2(command, args = [], options = {}) {
       return new Promise((resolve, reject) => {
         log_1.log.info(`$ ${command} ${args.map((a) => a.includes(" ") ? `"${a}"` : a).join(" ")}`);
         const child = (0, child_process_1.spawn)(command, args, {
@@ -128,12 +128,12 @@ var require_env = __commonJS({
   "../../packages/shared/dist/env.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.setOutput = setOutput2;
+    exports2.setOutput = setOutput;
     exports2.setEnv = setEnv;
     exports2.getEnv = getEnv2;
-    exports2.getEnvBool = getEnvBool;
+    exports2.getEnvBool = getEnvBool2;
     var fs_1 = require("fs");
-    function setOutput2(name, value) {
+    function setOutput(name, value) {
       const file = process.env.GITHUB_OUTPUT;
       if (!file) {
         throw new Error("GITHUB_OUTPUT is not defined");
@@ -156,7 +156,7 @@ var require_env = __commonJS({
       }
       return value;
     }
-    function getEnvBool(name, defaultValue = false) {
+    function getEnvBool2(name, defaultValue = false) {
       const value = process.env[name];
       if (value === void 0)
         return defaultValue;
@@ -208,11 +208,11 @@ var require_github = __commonJS({
     }();
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.getPullRequestContext = getPullRequestContext;
-    exports2.createPullRequestReview = createPullRequestReview2;
-    exports2.createIssueComment = createIssueComment2;
-    exports2.getPullRequest = getPullRequest2;
+    exports2.createPullRequestReview = createPullRequestReview;
+    exports2.createIssueComment = createIssueComment;
+    exports2.getPullRequest = getPullRequest;
     exports2.getMergeBase = getMergeBase;
-    exports2.getPullRequestCheckoutInfo = getPullRequestCheckoutInfo;
+    exports2.getPullRequestCheckoutInfo = getPullRequestCheckoutInfo2;
     exports2.parseRepo = parseRepo;
     var exec_1 = require_exec();
     async function getPullRequestContext(repo, prNumber, token) {
@@ -261,7 +261,7 @@ var require_github = __commonJS({
         }
       }
     }
-    async function createPullRequestReview2(repo, prNumber, token, commitId, body, comments) {
+    async function createPullRequestReview(repo, prNumber, token, commitId, body, comments) {
       return ghApiPost(repo, token, `repos/${repo}/pulls/${prNumber}/reviews`, {
         commit_id: commitId,
         body,
@@ -269,10 +269,10 @@ var require_github = __commonJS({
         comments
       });
     }
-    async function createIssueComment2(repo, issueNumber, token, body) {
+    async function createIssueComment(repo, issueNumber, token, body) {
       return ghApiPost(repo, token, `repos/${repo}/issues/${issueNumber}/comments`, { body });
     }
-    async function getPullRequest2(repo, prNumber, token) {
+    async function getPullRequest(repo, prNumber, token) {
       const { stdout } = await (0, exec_1.execCapture)("gh", [
         "api",
         `--header=Authorization: token ${token}`,
@@ -297,7 +297,7 @@ var require_github = __commonJS({
       }
       return data.merge_base_commit.sha;
     }
-    async function getPullRequestCheckoutInfo(repo, prNumber, token) {
+    async function getPullRequestCheckoutInfo2(repo, prNumber, token) {
       const { stdout } = await (0, exec_1.execCapture)("gh", [
         "pr",
         "view",
@@ -332,13 +332,13 @@ var require_review = __commonJS({
   "../../packages/shared/dist/review.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.parseOcrOutput = parseOcrOutput2;
+    exports2.parseOcrOutput = parseOcrOutput;
     exports2.formatCommentBody = formatCommentBody;
     exports2.buildInlineComment = buildInlineComment;
-    exports2.splitComments = splitComments2;
+    exports2.splitComments = splitComments;
     exports2.formatSummaryComment = formatSummaryComment;
-    exports2.buildSummaryBody = buildSummaryBody2;
-    function parseOcrOutput2(raw) {
+    exports2.buildSummaryBody = buildSummaryBody;
+    function parseOcrOutput(raw) {
       if (!raw || raw.trim() === "") {
         return { status: "success", message: "", comments: [] };
       }
@@ -369,7 +369,7 @@ var require_review = __commonJS({
       }
       return inline;
     }
-    function splitComments2(comments) {
+    function splitComments(comments) {
       const inline = [];
       const summary = [];
       for (const comment of comments) {
@@ -399,7 +399,7 @@ var require_review = __commonJS({
       }
       return md;
     }
-    function buildSummaryBody2(totalCount, inlineCount, summaryCount, message, summaryComments) {
+    function buildSummaryBody(totalCount, inlineCount, summaryCount, message, summaryComments) {
       let body = message || `OpenCodeReview found **${totalCount}** issue(s) in this PR.`;
       if (totalCount > 0) {
         body += `
@@ -445,107 +445,72 @@ var require_dist = __commonJS({
   }
 });
 
-// src/post-review.ts
+// src/checkout.ts
 var import_shared = __toESM(require_dist());
-var import_fs = require("fs");
-var RESULT_PATH = "/tmp/ocr-result.json";
-var STDERR_PATH = "/tmp/ocr-stderr.log";
-function prefixIdentifier(body, identifier) {
-  if (!identifier) {
-    return body;
-  }
-  return `[${identifier}] ${body}`;
+function isEnabled() {
+  return (0, import_shared.getEnvBool)("AUTO_CHECKOUT", true);
+}
+function isPullRequestEvent() {
+  const eventName = (0, import_shared.getEnv)("GITHUB_EVENT_NAME");
+  return eventName === "pull_request" || eventName === "issue_comment";
+}
+function generateLocalBranchName(prNumber) {
+  const timestamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:-]/g, "").replace(/\.\d{3}Z/, "").split("T").join("");
+  return `ocr-review/pr${prNumber}-${timestamp}`;
+}
+async function setupGitCredentials() {
+  await (0, import_shared.exec)("gh", ["auth", "setup-git", "--hostname", "github.com"]);
 }
 async function main() {
+  if (!isEnabled()) {
+    import_shared.log.info("AUTO_CHECKOUT is disabled; skipping checkout");
+    return;
+  }
+  if (!isPullRequestEvent()) {
+    import_shared.log.info(`Skipping checkout for non-PR event: ${(0, import_shared.getEnv)("GITHUB_EVENT_NAME")}`);
+    return;
+  }
   const repo = (0, import_shared.getEnv)("GITHUB_REPOSITORY");
   const prNumber = parseInt((0, import_shared.getEnv)("PR_NUMBER"), 10);
   const token = (0, import_shared.getEnv)("GITHUB_TOKEN");
-  const identifier = (0, import_shared.getEnv)("IDENTIFIER", false) || "";
-  let resultRaw = "";
-  try {
-    resultRaw = (0, import_fs.readFileSync)(RESULT_PATH, "utf8");
-  } catch {
-    resultRaw = "";
+  if (Number.isNaN(prNumber) || prNumber <= 0) {
+    throw new Error(`Invalid PR number: ${(0, import_shared.getEnv)("PR_NUMBER")}`);
   }
-  if (!resultRaw.trim()) {
-    let body = "\u26A0\uFE0F **OpenCodeReview** produced no output.";
-    try {
-      const stderr = (0, import_fs.readFileSync)(STDERR_PATH, "utf8").trim();
-      if (stderr) {
-        body += "\n\n```\n" + stderr + "\n```";
-      }
-    } catch {
-    }
-    await (0, import_shared.createIssueComment)(repo, prNumber, token, prefixIdentifier(body, identifier));
-    (0, import_shared.setOutput)("review-count", "0");
-    (0, import_shared.setOutput)("inline-count", "0");
-    (0, import_shared.setOutput)("summary-count", "0");
-    (0, import_shared.setOutput)("failed-count", "0");
-    return;
+  await setupGitCredentials();
+  import_shared.log.info(`Resolving checkout info for ${repo}#${prNumber}`);
+  const info = await (0, import_shared.getPullRequestCheckoutInfo)(repo, prNumber, token);
+  import_shared.log.info(`head-ref: ${info.headRefName}`);
+  import_shared.log.info(`head-repository: ${info.headRepository.nameWithOwner}`);
+  import_shared.log.info(`cross-repository: ${info.isCrossRepository}`);
+  if (info.isCrossRepository) {
+    import_shared.log.info("Checking out fork PR branch");
+    const localBranch = generateLocalBranchName(prNumber);
+    const depth = Math.max(info.commitCount + 1, 20);
+    await (0, import_shared.exec)("git", [
+      "remote",
+      "add",
+      "fork",
+      `https://github.com/${info.headRepository.nameWithOwner}.git`
+    ]);
+    await (0, import_shared.exec)("git", [
+      "fetch",
+      "fork",
+      `--depth=${depth}`,
+      info.headRefName
+    ]);
+    await (0, import_shared.exec)("git", [
+      "checkout",
+      "-b",
+      localBranch,
+      `fork/${info.headRefName}`
+    ]);
+    import_shared.log.info(`Checked out fork branch as ${localBranch}`);
+  } else {
+    import_shared.log.info("Checking out same-repo PR branch");
+    await (0, import_shared.exec)("git", ["fetch", "origin", `${info.headRefName}:${info.headRefName}`]);
+    await (0, import_shared.exec)("git", ["checkout", info.headRefName]);
+    import_shared.log.info(`Checked out origin/${info.headRefName}`);
   }
-  let result;
-  try {
-    result = (0, import_shared.parseOcrOutput)(resultRaw);
-  } catch (error) {
-    let body = "\u26A0\uFE0F **OpenCodeReview** failed to parse output.";
-    try {
-      const stderr = (0, import_fs.readFileSync)(STDERR_PATH, "utf8").trim();
-      if (stderr) {
-        body += "\n\n```\n" + stderr + "\n```";
-      }
-    } catch {
-    }
-    await (0, import_shared.createIssueComment)(repo, prNumber, token, prefixIdentifier(body, identifier));
-    throw error;
-  }
-  const comments = result.comments || [];
-  const { inline, summary } = (0, import_shared.splitComments)(comments);
-  if (identifier) {
-    for (const comment of inline) {
-      comment.body = prefixIdentifier(comment.body, identifier);
-    }
-    for (const comment of summary) {
-      comment.content = prefixIdentifier(comment.content, identifier);
-    }
-  }
-  let inlineCount = 0;
-  let summaryCount = summary.length;
-  let failedCount = 0;
-  if (inline.length > 0) {
-    try {
-      const pr = await (0, import_shared.getPullRequest)(repo, prNumber, token);
-      await (0, import_shared.createPullRequestReview)(repo, prNumber, token, pr.headSha, "", inline);
-      inlineCount = inline.length;
-      import_shared.log.info(`Posted ${inline.length} inline comments`);
-    } catch (error) {
-      import_shared.log.warning(`Failed to post batch review: ${error instanceof Error ? error.message : String(error)}`);
-      summary.unshift(...inline.map((c) => ({
-        path: c.path,
-        start_line: c.start_line || c.line,
-        end_line: c.line,
-        content: c.body
-      })));
-      summaryCount = summary.length;
-      inlineCount = 0;
-      failedCount = inline.length;
-    }
-  }
-  if (summary.length > 0 || result.message && result.message.trim() !== "") {
-    const totalCount = comments.length;
-    let body = (0, import_shared.buildSummaryBody)(
-      totalCount,
-      inlineCount,
-      summaryCount,
-      result.message || "",
-      summary
-    );
-    body = prefixIdentifier(body, identifier);
-    await (0, import_shared.createIssueComment)(repo, prNumber, token, body);
-  }
-  (0, import_shared.setOutput)("review-count", String(comments.length));
-  (0, import_shared.setOutput)("inline-count", String(inlineCount));
-  (0, import_shared.setOutput)("summary-count", String(summaryCount));
-  (0, import_shared.setOutput)("failed-count", String(failedCount));
 }
 main().catch((error) => {
   console.error(error);
