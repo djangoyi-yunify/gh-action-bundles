@@ -65,13 +65,17 @@
 - [x] 8.2 Add a new file `feature.py` containing `eval()`, hardcoded password, and `os.system()`
 - [x] 8.3 Push branch and open PR #10
 - [x] 8.4 Trigger review automatically via `pull_request`
-- [x] 8.5 Observe OCR behavior: OCR exited with code 1; action posted summary comment `[OCR] ⚠️ OpenCodeReview produced no output. Error: review failed: all 1 file review(s) failed`
-- [x] 8.6 Compare with TC-01: existing `main.py` modifications produced inline comments; the newly added `feature.py` did not
-- [x] 8.7 Record result: OCR currently fails to review newly added files in this repository/configuration. No doc update made yet pending decision on whether to document as known limitation or investigate further
+- [x] 8.5 Observe OCR behavior:
+  - First auto-triggered `pull_request` run (28316981456) failed with `[OCR] ⚠️ OpenCodeReview produced no output. Error: review failed: all 1 file review(s) failed`.
+  - Manual `issue_comment` trigger (28317691928) on the same PR successfully reviewed `feature.py` and posted 3 inline `[OCR]` comments.
+  - Re-triggered auto `pull_request` run (28317727985) also succeeded and posted inline comments.
+  - Fork PR #12 (`yijing1998:test-new-file-bug`) with a new file `broken_module.py` was successfully reviewed via manual `/ocr review`.
+- [x] 8.6 Compare with TC-01: both existing files and newly added files can produce inline `[OCR]` comments
+- [x] 8.7 Record result: OCR **can** review newly added files. The initial TC-07 auto-run failure was transient; subsequent auto and manual runs succeeded. The incorrect "Known limitations" note added to README was removed.
 
 ## 9. Finalize
 
 - [x] 9.1 Summarize all test results (see summary below)
-- [x] 9.2 Close test PRs #6, #8, #9, #10 without merging; PR #3 was already closed
+- [x] 9.2 Close test PRs #6, #8, #9, #10, #12 without merging; PR #3 was already closed
 - [x] 9.3 Delete base-repo test branches: `tc01-auto-review`, `tc04-merge-base`, `tc05-comment-trigger`, `tc07-new-file-review`
-- [x] 9.4 Update production docs: added "Known limitations" section to `actions/ocr-review/README.md` documenting OCR's failure to review newly added files
+- [x] 9.4 Correct production docs: removed the inaccurate "Known limitations" section from `actions/ocr-review/README.md`; OCR can review newly added files
