@@ -11,12 +11,12 @@
     "test": "pnpm -r test"
   },
   "devDependencies": {
-    "@types/node": "^20.14.0",
+    "@types/node": "^24.0.0",
     "esbuild": "^0.21.0",
     "typescript": "^5.4.0"
   },
   "engines": {
-    "node": ">=20",
+    "node": ">=24",
     "pnpm": ">=9"
   }
 }

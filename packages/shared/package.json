@@ -5,13 +5,27 @@
   "description": "Shared utilities for gh-action-bundles actions",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "default": "./dist/index.js"
+    },
+    "./build-action": {
+      "default": "./dist/build-action.js"
+    }
+  },
+  "bin": {
+    "build-action": "./dist/build-action.js"
+  },
   "scripts": {
     "build": "tsc",
     "lint": "tsc --noEmit",
     "test": "node --test dist/**/*.test.js"
   },
+  "dependencies": {
+    "esbuild": "^0.21.0"
+  },
   "devDependencies": {
-    "@types/node": "^20.14.0",
+    "@types/node": "^24.0.0",
     "typescript": "^5.4.0"
   }
 }
