@@ -27,5 +27,5 @@
 - [ ] 5.1 Run `pnpm build` and confirm dist files are updated
 - [ ] 5.2 Run `pnpm lint` and confirm type checking passes
 - [ ] 5.3 Commit and push changes to `gh-action-bundles@main`
-- [ ] 5.4 Create or update a PR where base branch has advanced
-- [ ] 5.5 Trigger review and verify diff range is correct
+- [x] 5.4 Create or update a PR where base branch has advanced
+- [x] 5.5 Trigger review and verify diff range is correct
