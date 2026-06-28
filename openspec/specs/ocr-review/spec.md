@@ -13,12 +13,16 @@ The action SHALL expose inputs for configuring the OCR LLM provider.
 - **WHEN** the calling workflow invokes `actions/ocr-review` with `llm-url`, `llm-token`, `llm-model`, and `pr-number`
 - **THEN** the action configures OCR and attempts to review the specified PR
 
-### Requirement: Action infers PR base and head from PR number
-The action SHALL infer `base-ref` and `head-sha` from the provided `pr-number` using the GitHub CLI or API.
+### Requirement: Action infers PR base, head, and merge base from PR number
+The action SHALL infer `base-ref`, `head-sha`, and `merge-base` from the provided `pr-number` using the GitHub CLI or API.
 
 #### Scenario: PR opened event
 - **WHEN** the action receives a `pr-number`
-- **THEN** it queries the PR metadata and uses the PR base branch name and head commit SHA as the review range
+- **THEN** it queries the PR metadata, computes the merge base between the base branch and the head SHA, and outputs `base-ref`, `head-sha`, and `merge-base`
+
+#### Scenario: Review output logging
+- **WHEN** the action resolves a PR
+- **THEN** it outputs both `base-ref` (branch name) and `merge-base` (commit SHA) for logging and display
 
 ### Requirement: Action installs OCR CLI
 The action SHALL install the `@alibaba-group/open-code-review` npm package globally.
@@ -43,11 +47,19 @@ The action SHALL configure OCR using `ocr config set` for URL, token, model, Ant
 - **THEN** OCR is configured for Anthropic protocol
 
 ### Requirement: Action runs OCR review on PR diff
-The action SHALL execute `ocr review --from origin/<base-ref> --to <head-sha> --format json` with optional flags.
+The action SHALL execute `ocr review --from <merge-base> --to <head-sha> --format json` with optional flags.
 
 #### Scenario: Basic review
 - **WHEN** all required inputs are valid
-- **THEN** OCR reviews the diff and outputs JSON to a known temporary path
+- **THEN** OCR reviews the diff from the PR merge base to the head SHA and outputs JSON to a known temporary path
+
+#### Scenario: Base branch has advanced since PR creation
+- **WHEN** the base branch receives new commits after the PR is created but before review
+- **THEN** the action reviews only the diff from the PR merge base to the PR head
+
+#### Scenario: Same-repo PR with stable base
+- **WHEN** the base branch has not advanced since the PR was created
+- **THEN** the merge base equals the previous base branch HEAD and the diff is unchanged
 
 #### Scenario: Custom rule file
 - **WHEN** `rule-path` is provided and the file exists
@@ -60,6 +72,13 @@ The action SHALL execute `ocr review --from origin/<base-ref> --to <head-sha> --
 #### Scenario: Background context
 - **WHEN** `background` input is provided
 - **THEN** OCR is invoked with `--background <text>`
+
+### Requirement: Action computes merge base for fork PRs
+The merge base computation SHALL work for PRs opened from fork repositories.
+
+#### Scenario: Fork PR manual review
+- **WHEN** a maintainer triggers review on a fork PR
+- **THEN** the action computes the merge base using the base branch name and the fork head SHA
 
 ### Requirement: Action publishes review comments to PR
 The action SHALL parse OCR JSON output and publish comments to the Pull Request.
