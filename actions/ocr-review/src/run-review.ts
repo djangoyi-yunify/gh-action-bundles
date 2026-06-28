@@ -10,7 +10,7 @@ async function main(): Promise<void> {
   const headSha = getEnv('OCR_HEAD_SHA');
   const mergeBase = getEnv('OCR_MERGE_BASE');
 
-  log.info(`Review range: origin/${baseRef}...${headSha}, merge-base: ${mergeBase}`);
+  log.info(`Review range: ${mergeBase}...${headSha} (base branch: origin/${baseRef})`);
 
   const args = [
     'review',

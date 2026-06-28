@@ -434,7 +434,7 @@ async function main() {
   const baseRef = (0, import_shared.getEnv)("OCR_BASE_REF");
   const headSha = (0, import_shared.getEnv)("OCR_HEAD_SHA");
   const mergeBase = (0, import_shared.getEnv)("OCR_MERGE_BASE");
-  import_shared.log.info(`Review range: origin/${baseRef}...${headSha}, merge-base: ${mergeBase}`);
+  import_shared.log.info(`Review range: ${mergeBase}...${headSha} (base branch: origin/${baseRef})`);
   const args = [
     "review",
     "--from",
