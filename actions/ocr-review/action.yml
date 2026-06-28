@@ -102,6 +102,7 @@ runs:
       env:
         OCR_BASE_REF: ${{ steps.resolve-pr.outputs.base-ref }}
         OCR_HEAD_SHA: ${{ steps.resolve-pr.outputs.head-sha }}
+        OCR_MERGE_BASE: ${{ steps.resolve-pr.outputs.merge-base }}
         RULE_PATH: ${{ inputs.rule-path }}
         EXCLUDE: ${{ inputs.exclude }}
         CONCURRENCY: ${{ inputs.concurrency }}

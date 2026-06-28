@@ -211,6 +211,7 @@ var require_github = __commonJS({
     exports2.createPullRequestReview = createPullRequestReview;
     exports2.createIssueComment = createIssueComment;
     exports2.getPullRequest = getPullRequest;
+    exports2.getMergeBase = getMergeBase;
     exports2.parseRepo = parseRepo;
     var exec_1 = require_exec();
     async function getPullRequestContext(repo, prNumber, token) {
@@ -280,6 +281,20 @@ var require_github = __commonJS({
       });
       const data = JSON.parse(stdout);
       return { headSha: data.head.sha };
+    }
+    async function getMergeBase(repo, baseRef, headSha, token) {
+      const { stdout } = await (0, exec_1.execCapture)("gh", [
+        "api",
+        `--header=Authorization: token ${token}`,
+        `repos/${repo}/compare/${baseRef}...${headSha}`
+      ], {
+        env: { GH_TOKEN: token }
+      });
+      const data = JSON.parse(stdout);
+      if (!data.merge_base_commit || !data.merge_base_commit.sha) {
+        throw new Error(`Could not determine merge base for ${baseRef}...${headSha}`);
+      }
+      return data.merge_base_commit.sha;
     }
     function parseRepo(repository) {
       const [owner, repoName] = repository.split("/");
@@ -418,10 +433,12 @@ var STDERR_PATH = "/tmp/ocr-stderr.log";
 async function main() {
   const baseRef = (0, import_shared.getEnv)("OCR_BASE_REF");
   const headSha = (0, import_shared.getEnv)("OCR_HEAD_SHA");
+  const mergeBase = (0, import_shared.getEnv)("OCR_MERGE_BASE");
+  import_shared.log.info(`Review range: origin/${baseRef}...${headSha}, merge-base: ${mergeBase}`);
   const args = [
     "review",
     "--from",
-    `origin/${baseRef}`,
+    mergeBase,
     "--to",
     headSha,
     "--format",

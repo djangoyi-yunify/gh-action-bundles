@@ -211,6 +211,7 @@ var require_github = __commonJS({
     exports2.createPullRequestReview = createPullRequestReview;
     exports2.createIssueComment = createIssueComment;
     exports2.getPullRequest = getPullRequest;
+    exports2.getMergeBase = getMergeBase2;
     exports2.parseRepo = parseRepo;
     var exec_1 = require_exec();
     async function getPullRequestContext2(repo, prNumber, token) {
@@ -280,6 +281,20 @@ var require_github = __commonJS({
       });
       const data = JSON.parse(stdout);
       return { headSha: data.head.sha };
+    }
+    async function getMergeBase2(repo, baseRef, headSha, token) {
+      const { stdout } = await (0, exec_1.execCapture)("gh", [
+        "api",
+        `--header=Authorization: token ${token}`,
+        `repos/${repo}/compare/${baseRef}...${headSha}`
+      ], {
+        env: { GH_TOKEN: token }
+      });
+      const data = JSON.parse(stdout);
+      if (!data.merge_base_commit || !data.merge_base_commit.sha) {
+        throw new Error(`Could not determine merge base for ${baseRef}...${headSha}`);
+      }
+      return data.merge_base_commit.sha;
     }
     function parseRepo(repository) {
       const [owner, repoName] = repository.split("/");
@@ -422,8 +437,11 @@ async function main() {
   const pr = await (0, import_shared.getPullRequestContext)(repo, prNumber, token);
   import_shared.log.info(`base-ref: ${pr.baseRef}`);
   import_shared.log.info(`head-sha: ${pr.headSha}`);
+  const mergeBase = await (0, import_shared.getMergeBase)(repo, pr.baseRef, pr.headSha, token);
+  import_shared.log.info(`merge-base: ${mergeBase}`);
   (0, import_shared.setOutput)("base-ref", pr.baseRef);
   (0, import_shared.setOutput)("head-sha", pr.headSha);
+  (0, import_shared.setOutput)("merge-base", mergeBase);
 }
 main().catch((error) => {
   console.error(error);

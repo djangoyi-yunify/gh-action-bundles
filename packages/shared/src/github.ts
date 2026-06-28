@@ -111,6 +111,27 @@ export async function getPullRequest(repo: string, prNumber: number, token: stri
   return { headSha: data.head.sha };
 }
 
+export async function getMergeBase(
+  repo: string,
+  baseRef: string,
+  headSha: string,
+  token: string
+): Promise<string> {
+  const { stdout } = await execCapture('gh', [
+    'api',
+    `--header=Authorization: token ${token}`,
+    `repos/${repo}/compare/${baseRef}...${headSha}`,
+  ], {
+    env: { GH_TOKEN: token },
+  });
+
+  const data = JSON.parse(stdout);
+  if (!data.merge_base_commit || !data.merge_base_commit.sha) {
+    throw new Error(`Could not determine merge base for ${baseRef}...${headSha}`);
+  }
+  return data.merge_base_commit.sha as string;
+}
+
 export function parseRepo(repository: string): { owner: string; repo: string } {
   const [owner, repoName] = repository.split('/');
   if (!owner || !repoName) {

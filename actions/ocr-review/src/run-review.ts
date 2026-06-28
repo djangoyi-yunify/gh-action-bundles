@@ -8,10 +8,13 @@ const STDERR_PATH = '/tmp/ocr-stderr.log';
 async function main(): Promise<void> {
   const baseRef = getEnv('OCR_BASE_REF');
   const headSha = getEnv('OCR_HEAD_SHA');
+  const mergeBase = getEnv('OCR_MERGE_BASE');
+
+  log.info(`Review range: origin/${baseRef}...${headSha}, merge-base: ${mergeBase}`);
 
   const args = [
     'review',
-    '--from', `origin/${baseRef}`,
+    '--from', mergeBase,
     '--to', headSha,
     '--format', 'json',
   ];

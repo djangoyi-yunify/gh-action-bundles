@@ -19,6 +19,7 @@ export declare function createIssueComment(repo: string, issueNumber: number, to
 export declare function getPullRequest(repo: string, prNumber: number, token: string): Promise<{
     headSha: string;
 }>;
+export declare function getMergeBase(repo: string, baseRef: string, headSha: string, token: string): Promise<string>;
 export declare function parseRepo(repository: string): {
     owner: string;
     repo: string;

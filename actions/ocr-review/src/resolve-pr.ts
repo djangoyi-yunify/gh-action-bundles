@@ -1,4 +1,4 @@
-import { getPullRequestContext, setOutput, getEnv, log } from '@gh-action-bundles/shared';
+import { getPullRequestContext, getMergeBase, setOutput, getEnv, log } from '@gh-action-bundles/shared';
 
 async function main(): Promise<void> {
   const repo = getEnv('GITHUB_REPOSITORY');
@@ -15,8 +15,12 @@ async function main(): Promise<void> {
   log.info(`base-ref: ${pr.baseRef}`);
   log.info(`head-sha: ${pr.headSha}`);
 
+  const mergeBase = await getMergeBase(repo, pr.baseRef, pr.headSha, token);
+  log.info(`merge-base: ${mergeBase}`);
+
   setOutput('base-ref', pr.baseRef);
   setOutput('head-sha', pr.headSha);
+  setOutput('merge-base', mergeBase);
 }
 
 main().catch((error) => {
