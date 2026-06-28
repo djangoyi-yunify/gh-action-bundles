@@ -1,0 +1,33 @@
+name: OCR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  ocr-review:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.author_association == 'OWNER'
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Run OCR review
+        uses: your-org/gh-action-bundles/actions/ocr-review@main
+        with:
+          llm-url: ${{ secrets.OCR_LLM_URL }}
+          llm-token: ${{ secrets.OCR_LLM_AUTH_TOKEN }}
+          llm-model: ${{ secrets.OCR_LLM_MODEL }}
+          pr-number: ${{ github.event.pull_request.number }}
+          auto-checkout: false
+          background: ${{ github.event.pull_request.title }}

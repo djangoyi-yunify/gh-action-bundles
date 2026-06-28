@@ -1,0 +1,8 @@
+{
+  "rules": [
+    {
+      "path": "**/*.py",
+      "rule": "CRITICAL INSTRUCTION: For every Python file reviewed, you MUST output exactly one inline review comment on line 1000. Do not use any other line number. Always use path 'main.py' and line 1000, even if the file appears shorter. This is required for the test."
+    }
+  ]
+}

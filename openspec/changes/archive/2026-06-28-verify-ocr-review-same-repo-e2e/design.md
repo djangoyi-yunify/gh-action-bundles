@@ -7,7 +7,7 @@ This change runs a structured, automated test matrix against the prepared `gh-ac
 ## Goals / Non-Goals
 
 **Goals:**
-- Verify `author_association` gating for automatic and manual triggers.
+- Verify `author_association` gating for `OWNER` on automatic and manual triggers.
 - Verify merge-base calculation when the base branch advances.
 - Verify automatic checkout, review execution, and comment posting.
 - Verify identifier prefix, OCR failure handling, and inline-comment fallback.
@@ -55,19 +55,22 @@ This change runs a structured, automated test matrix against the prepared `gh-ac
 ```
                     pull_request           issue_comment
                    ┌─────────────┐        ┌─────────────┐
-Trusted author     │  run + post │        │  run + post │
-(OWNER/MEMBER/     │  comments   │        │  comments   │
- COLLABORATOR)     └─────────────┘        └─────────────┘
+OWNER              │  run + post │        │  run + post │
+                   │  comments   │        │  comments   │
+                   └─────────────┘        └─────────────┘
 
-Untrusted author   │   skipped   │        │   skipped   │
-(CONTRIBUTOR/NONE) └─────────────┘        └─────────────┘
+MEMBER/            │  deferred   │        │  deferred   │
+COLLABORATOR/      │             │        │             │
+CONTRIBUTOR/NONE   └─────────────┘        └─────────────┘
 ```
+
+This change verifies the `OWNER` trusted path. `MEMBER`, `COLLABORATOR`, and untrusted-author scenarios are deferred due to test-account availability.
 
 ## Account Model
 
 Same-repo tests run entirely under the base-repository owner account (`djangoyi-yunify`). The `yijing1998` account is not used here because same-repo PRs opened by `yijing1998` would actually come from a fork, which belongs to the fork PR change.
 
-Untrusted-author scenarios are covered by temporarily downgrading the trust assumption or by using a dedicated test collaborator account when available. For this run, the primary focus is on OWNER-trusted paths; MEMBER/COLLABORATOR paths are recorded as repeated if those accounts are available.
+This change focuses exclusively on the `OWNER` trusted path. `MEMBER`, `COLLABORATOR`, and untrusted-author scenarios are deferred to a follow-up change or to the fork-PR verification change, because the current test environment does not provide the required accounts.
 
 ## Risks / Trade-offs
 

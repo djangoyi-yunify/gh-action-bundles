@@ -1,22 +1,14 @@
 ## ADDED Requirements
 
 ### Requirement: Trusted authors receive automatic review
-The verification SHALL confirm that `pull_request` workflows run and post review comments for PRs opened by `OWNER`, `MEMBER`, or `COLLABORATOR`.
+The verification SHALL confirm that `pull_request` workflows run and post review comments for PRs opened by `OWNER`. Verification of `MEMBER` and `COLLABORATOR` associations is deferred to a follow-up change due to test-account availability.
 
 #### Scenario: OWNER opens same-repo PR
 - **WHEN** an `OWNER` opens a same-repo PR containing known problematic code
 - **THEN** the `pull_request` workflow runs and posts `[OCR]` review comments
 
-#### Scenario: MEMBER opens same-repo PR
-- **WHEN** a `MEMBER` opens a same-repo PR containing known problematic code
-- **THEN** the `pull_request` workflow runs and posts `[OCR]` review comments
-
-#### Scenario: COLLABORATOR opens same-repo PR
-- **WHEN** a `COLLABORATOR` opens a same-repo PR containing known problematic code
-- **THEN** the `pull_request` workflow runs and posts `[OCR]` review comments
-
-### Requirement: Untrusted authors do not receive automatic review
-The verification SHALL confirm that `pull_request` workflows are skipped for PRs opened by authors outside the trusted set.
+### Requirement: Untrusted authors do not receive automatic review [DEFERRED]
+The verification SHALL confirm that `pull_request` workflows are skipped for PRs opened by authors outside the trusted set. This requirement is deferred to a follow-up change due to the need for a dedicated untrusted test account in the same-repo scenario.
 
 #### Scenario: CONTRIBUTOR opens same-repo PR
 - **WHEN** a `CONTRIBUTOR` or `NONE` association user opens a same-repo PR
@@ -29,8 +21,8 @@ The verification SHALL confirm that `/ocr review` triggers review for trusted co
 - **WHEN** an `OWNER`, `MEMBER`, or `COLLABORATOR` comments `/ocr review` on a same-repo PR
 - **THEN** the `issue_comment` workflow runs and posts `[OCR]` review comments
 
-### Requirement: Untrusted users cannot trigger manual review
-The verification SHALL confirm that `/ocr review` from untrusted commenters is ignored.
+### Requirement: Untrusted users cannot trigger manual review [DEFERRED]
+The verification SHALL confirm that `/ocr review` from untrusted commenters is ignored. This requirement is deferred to a follow-up change due to the need for a dedicated untrusted test account in the same-repo scenario.
 
 #### Scenario: Untrusted user comments `/ocr review`
 - **WHEN** a user with `CONTRIBUTOR`, `NONE`, or similar association comments `/ocr review`
@@ -98,3 +90,23 @@ The verification SHALL list same-repo boundary conditions that are not part of t
 #### Scenario: Optional conditions reviewed
 - **WHEN** the team reviews the optional list
 - **THEN** they can choose to add any of them to the current or a future run
+
+## DEFERRED Requirements
+
+The following requirements are valid for same-repo verification but are not executed in this change due to test-account availability. They are deferred to a follow-up change or to the fork-PR verification change.
+
+### Requirement: MEMBER opens same-repo PR
+- **WHEN** a `MEMBER` opens a same-repo PR containing known problematic code
+- **THEN** the `pull_request` workflow runs and posts `[OCR]` review comments
+
+### Requirement: COLLABORATOR opens same-repo PR
+- **WHEN** a `COLLABORATOR` opens a same-repo PR containing known problematic code
+- **THEN** the `pull_request` workflow runs and posts `[OCR]` review comments
+
+### Requirement: Untrusted authors do not receive automatic review
+- **WHEN** a `CONTRIBUTOR` or `NONE` association user opens a same-repo PR
+- **THEN** the `pull_request` workflow is skipped and no review comments are posted
+
+### Requirement: Untrusted users cannot trigger manual review
+- **WHEN** a user with `CONTRIBUTOR`, `NONE`, or similar association comments `/ocr review`
+- **THEN** the `issue_comment` workflow is skipped and no comments are posted

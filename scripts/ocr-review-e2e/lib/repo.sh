@@ -38,7 +38,7 @@ reset_base_branch() {
   git -C "${TEST_WORKDIR}" push origin "${TEST_BASE_BRANCH}" --force-with-lease || true
 }
 
-# Commit the workflow file from examples/ocr-review.yml
+# Commit the workflow file from examples/ocr-review.yml to the base branch.
 deploy_workflow() {
   local source_file="${1:-examples/ocr-review.yml}"
   if [ ! -f "${source_file}" ]; then
@@ -46,6 +46,8 @@ deploy_workflow() {
     exit 1
   fi
   gh_auth_switch "${BASE_OWNER}"
+  git -C "${TEST_WORKDIR}" checkout "${TEST_BASE_BRANCH}"
+  git -C "${TEST_WORKDIR}" pull origin "${TEST_BASE_BRANCH}"
   mkdir -p "${TEST_WORKDIR}/.github/workflows"
   # Replace placeholder owner with the actual action repo owner.
   # Remove concurrency config to avoid test runs cancelling each other.
@@ -129,4 +131,29 @@ commit_changes() {
   local message="$1"
   git -C "${TEST_WORKDIR}" add -A
   git -C "${TEST_WORKDIR}" commit -m "${message}"
+}
+
+# Copy an extra file into the test repo, commit, and push it to the base branch.
+# Useful for deploying custom OCR rule files or other test fixtures.
+# Usage: deploy_test_fixture <source_file> <dest_path_in_repo> <commit_message>
+deploy_test_fixture() {
+  local source_file="$1"
+  local dest_path="$2"
+  local message="$3"
+  if [ ! -f "${source_file}" ]; then
+    echo "Error: fixture source file not found: ${source_file}" >&2
+    exit 1
+  fi
+  gh_auth_switch "${BASE_OWNER}"
+  git -C "${TEST_WORKDIR}" checkout "${TEST_BASE_BRANCH}"
+  git -C "${TEST_WORKDIR}" pull origin "${TEST_BASE_BRANCH}"
+  mkdir -p "${TEST_WORKDIR}/$(dirname "${dest_path}")"
+  cp "${source_file}" "${TEST_WORKDIR}/${dest_path}"
+  git -C "${TEST_WORKDIR}" add "${dest_path}"
+  if git -C "${TEST_WORKDIR}" diff --cached --quiet; then
+    echo "Fixture ${dest_path} is already up to date"
+  else
+    git -C "${TEST_WORKDIR}" commit -m "${message}"
+    git -C "${TEST_WORKDIR}" push origin "${TEST_BASE_BRANCH}"
+  fi
 }

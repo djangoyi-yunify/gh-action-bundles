@@ -1,0 +1,25 @@
+name: OCR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  ocr-review:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.author_association == 'OWNER'
+    steps:
+      - name: Run OCR review with invalid LLM credentials
+        uses: your-org/gh-action-bundles/actions/ocr-review@main
+        with:
+          llm-url: http://localhost:59999/invalid-llm-endpoint
+          llm-token: invalid-token-for-e2e-test
+          llm-model: invalid-model-for-e2e-test
+          pr-number: ${{ github.event.pull_request.number }}
+          background: ${{ github.event.pull_request.title }}

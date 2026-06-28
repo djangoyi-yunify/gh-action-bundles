@@ -1,0 +1,36 @@
+name: OCR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  ocr-review:
+    runs-on: ubuntu-latest
+    if: |
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.author_association == 'OWNER'
+      ) ||
+      (
+        github.event_name == 'issue_comment' &&
+        github.event.issue.pull_request != null &&
+        startsWith(github.event.comment.body, '/ocr review') &&
+        github.event.comment.author_association == 'OWNER'
+      )
+    steps:
+      - name: Run OCR review
+        uses: your-org/gh-action-bundles/actions/ocr-review@main
+        with:
+          llm-url: ${{ secrets.OCR_LLM_URL }}
+          llm-token: ${{ secrets.OCR_LLM_AUTH_TOKEN }}
+          llm-model: ${{ secrets.OCR_LLM_MODEL }}
+          pr-number: ${{ github.event.pull_request.number || github.event.issue.number }}
+          identifier: OCR
+          background: ${{ github.event.pull_request.title }}

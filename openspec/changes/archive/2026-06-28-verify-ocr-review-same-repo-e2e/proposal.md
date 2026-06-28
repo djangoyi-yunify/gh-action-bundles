@@ -8,7 +8,8 @@ Previous verification mixed same-repo and fork-pr scenarios in a single change. 
 
 - Add an automated test script `scripts/ocr-review-e2e/run-same-repo.sh` that exercises same-repo PR scenarios.
 - Run the script against the prepared `gh-action-test-01` environment.
-- Cover required boundary conditions: trusted/untrusted authors, manual triggers, merge-base correctness, new and modified files, OCR failures, inline-comment fallback, identifier prefixes, and `auto-checkout: false`.
+- Cover required boundary conditions: OWNER trusted paths, manual triggers, merge-base correctness, new and modified files, OCR failures, inline-comment fallback, identifier prefixes, and `auto-checkout: false`.
+- **Defer permission-gate scenarios** for `MEMBER`, `COLLABORATOR`, and untrusted authors to a follow-up change or the fork-PR verification change, due to test-account availability constraints.
 - List optional/extreme boundary conditions separately so the team can decide whether to test them.
 - Record results in this change's tasks.
 

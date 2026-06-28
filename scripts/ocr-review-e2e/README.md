@@ -43,9 +43,18 @@ This will:
 After setup, run the same-repo or fork PR verification scripts:
 
 ```bash
+# Run the default scenario groups (auto, manual, merge-base, content)
 ./scripts/ocr-review-e2e/run-same-repo.sh
-./scripts/ocr-review-e2e/run-fork.sh
+
+# Run a specific group or groups
+./scripts/ocr-review-e2e/run-same-repo.sh --only failure
+./scripts/ocr-review-e2e/run-same-repo.sh --only fallback checkout
+
+# Run everything
+./scripts/ocr-review-e2e/run-same-repo.sh --only auto manual merge-base content failure fallback checkout
 ```
+
+Available groups: `auto`, `manual`, `merge-base`, `content`, `failure`, `fallback`, `checkout`.
 
 (These scripts are created by their respective OpenSpec changes.)
 
@@ -55,11 +64,19 @@ After setup, run the same-repo or fork PR verification scripts:
 scripts/ocr-review-e2e/
 ├── README.md
 ├── setup.sh
-└── lib/
-    ├── env.sh      # environment variables and gh auth switch helpers
-    ├── github.sh   # gh CLI wrappers for repos, PRs, branches, secrets
-    ├── repo.sh     # local clone and commit helpers
-    └── assert.sh   # workflow run assertions and polling
+├── run-same-repo.sh
+├── lib/
+│   ├── env.sh      # environment variables and gh auth switch helpers
+│   ├── github.sh   # gh CLI wrappers for repos, PRs, branches, secrets
+│   ├── repo.sh     # local clone and commit helpers
+│   └── assert.sh   # workflow run assertions and polling
+├── rules/
+│   └── inline-fallback-rule.json  # custom rule for tc-inline-fallback
+└── workflows/
+    ├── ocr-review-failure.yml            # workflow variant with invalid LLM credentials
+    ├── ocr-review-identifier.yml         # workflow variant with identifier
+    ├── ocr-review-auto-checkout-false.yml # workflow variant with auto-checkout: false
+    └── ocr-review-inline-fallback.yml    # workflow variant for inline fallback
 ```
 
 ## Safety Notes
