@@ -89,3 +89,54 @@ The action SHALL capture OCR stderr and continue to report errors as PR comments
 #### Scenario: OCR CLI fails
 - **WHEN** `ocr review` exits with an error
 - **THEN** the action reads stderr and posts a PR comment describing the failure
+
+### Requirement: Action accepts an identifier input
+The action SHALL accept an optional `identifier` input that labels the source of each review comment.
+
+#### Scenario: Identifier provided
+- **WHEN** the action is invoked with `identifier: OCR`
+- **THEN** each review comment body is prefixed with `[OCR] `
+
+#### Scenario: Identifier omitted
+- **WHEN** the action is invoked without an identifier
+- **THEN** comments are posted without any prefix
+
+### Requirement: Action supports an author association gate
+The action's example workflow SHALL only automatically review PRs opened by trusted authors.
+
+#### Scenario: Trusted author opens same-repo PR
+- **WHEN** an `OWNER`, `MEMBER`, or `COLLABORATOR` opens a PR from a branch in the same repository
+- **THEN** the `pull_request` workflow runs and performs OCR review
+
+#### Scenario: Untrusted author opens PR
+- **WHEN** a user with any other `author_association` opens a PR
+- **THEN** the `pull_request` workflow is skipped and no review is performed
+
+### Requirement: Action supports a manual review command
+The action's example workflow SHALL support a comment command that allows trusted users to request a review of any PR.
+
+#### Scenario: Trusted user requests review via comment
+- **WHEN** an `OWNER`, `MEMBER`, or `COLLABORATOR` comments `/ocr review` on a PR
+- **THEN** the `issue_comment` workflow runs and performs OCR review
+
+#### Scenario: Untrusted user requests review via comment
+- **WHEN** a user with any other `author_association` comments `/ocr review`
+- **THEN** the `issue_comment` workflow is skipped
+
+### Requirement: Comment-triggered workflows checkout PR head
+The action's example workflow SHALL checkout the PR head branch when triggered by an `issue_comment` event.
+
+#### Scenario: Manual review of same-repo PR
+- **WHEN** `/ocr review` is commented on a same-repository PR
+- **THEN** the workflow checks out the PR head before running OCR
+
+#### Scenario: Manual review of fork PR
+- **WHEN** `/ocr review` is commented on a fork PR
+- **THEN** the workflow checks out the PR head before running OCR
+
+### Requirement: Documentation explains the security model
+The action's README SHALL document why fork PRs are not automatically reviewed and how to trigger them manually.
+
+#### Scenario: User reads security notes
+- **WHEN** a consumer reads the README
+- **THEN** they understand the `pull_request` vs `pull_request_target` trade-off and the purpose of the `author_association` gate
