@@ -27,5 +27,11 @@
 - [x] 5.1 Run `pnpm build` and confirm dist files are updated
 - [x] 5.2 Run `pnpm lint` and confirm type checking passes
 - [x] 5.3 Commit and push changes to `gh-action-bundles@main`
-- [ ] 5.4 Create or update a PR where base branch has advanced
-- [ ] 5.5 Trigger review and verify diff range is correct
+- [x] 5.4 Create or update a PR where base branch has advanced
+  - PR: https://github.com/djangoyi-yunify/gh-action-test-01/pull/14
+  - Created when main was at `83470e90`
+  - Advanced main to `1f0a3c22` via PR https://github.com/djangoyi-yunify/gh-action-test-01/pull/15
+- [x] 5.5 Trigger review and verify diff range is correct
+  - Run: https://github.com/djangoyi-yunify/gh-action-test-01/actions/runs/28319866011
+  - Verified `merge-base: 83470e903f3bf9bcd0df41a140d664ab56218688`
+  - Verified `--from 83470e90... --to c4e2e02...` uses the PR merge base, not the current main HEAD
