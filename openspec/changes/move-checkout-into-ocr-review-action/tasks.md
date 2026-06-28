@@ -36,5 +36,9 @@
   - [x] Use `git fetch origin <headRefName>:<headRefName>` to create the local branch explicitly
   - [x] Run `gh auth setup-git` so `git fetch` works for private repositories
   - [x] Rebuild `dist/checkout.js`
-- [ ] 5.4 Test with a same-repo PR in `gh-action-test-01`
-- [ ] 5.5 Test with a fork PR manual `/ocr review` in `gh-action-test-01`
+- [x] 5.4 Test with a same-repo PR in `gh-action-test-01`
+  - PR: https://github.com/djangoyi-yunify/gh-action-test-01/pull/13
+  - Run: https://github.com/djangoyi-yunify/gh-action-test-01/actions/runs/28319367165
+- [x] 5.5 Test with a fork PR manual `/ocr review` in `gh-action-test-01`
+  - PR: https://github.com/djangoyi-yunify/gh-action-test-01/pull/12
+  - Run: https://github.com/djangoyi-yunify/gh-action-test-01/actions/runs/28319413240
