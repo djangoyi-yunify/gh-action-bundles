@@ -47,7 +47,11 @@ deploy_workflow() {
   fi
   gh_auth_switch "${BASE_OWNER}"
   mkdir -p "${TEST_WORKDIR}/.github/workflows"
-  cp "${source_file}" "${TEST_WORKDIR}/${WORKFLOW_FILE}"
+  # Replace placeholder owner with the actual action repo owner.
+  # Remove concurrency config to avoid test runs cancelling each other.
+  sed -e "s|your-org/gh-action-bundles|${BASE_OWNER}/gh-action-bundles|g" \
+      -e '/^concurrency:/,/^  cancel-in-progress: true$/d' \
+      "${source_file}" > "${TEST_WORKDIR}/${WORKFLOW_FILE}"
   git -C "${TEST_WORKDIR}" add "${WORKFLOW_FILE}"
   if git -C "${TEST_WORKDIR}" diff --cached --quiet; then
     echo "Workflow file is already up to date"
@@ -75,4 +79,54 @@ PY
     git -C "${TEST_WORKDIR}" commit -m "chore: add clean base code for e2e tests"
     git -C "${TEST_WORKDIR}" push origin "${TEST_BASE_BRANCH}"
   fi
+}
+
+# Create a test branch from the current base branch and push it.
+# Usage: create_test_branch <branch-name>
+create_test_branch() {
+  local branch="$1"
+  gh_auth_switch "${BASE_OWNER}"
+  git -C "${TEST_WORKDIR}" checkout "${TEST_BASE_BRANCH}"
+  git -C "${TEST_WORKDIR}" pull origin "${TEST_BASE_BRANCH}"
+  git -C "${TEST_WORKDIR}" checkout -b "${branch}"
+}
+
+# Push the current test branch to origin.
+# Usage: push_test_branch <branch-name>
+push_test_branch() {
+  local branch="$1"
+  gh_auth_switch "${BASE_OWNER}"
+  git -C "${TEST_WORKDIR}" push origin "${branch}"
+}
+
+# Write problematic code to main.py for testing.
+write_main_py_with_bugs() {
+  cat > "${TEST_WORKDIR}/main.py" <<'PY'
+def process(user_input):
+    password = "hardcoded_secret_123"
+    result = eval(user_input)
+    os.system("echo " + user_input)
+    return result, password
+PY
+}
+
+# Write a new file with problematic code.
+# Usage: write_new_buggy_file <filename>
+write_new_buggy_file() {
+  local filename="$1"
+  cat > "${TEST_WORKDIR}/${filename}" <<'PY'
+def new_feature(user_input):
+    admin_password = "admin123456"
+    result = eval(user_input)
+    os.system("rm -rf " + user_input)
+    return result, admin_password
+PY
+}
+
+# Commit changes in the test repo with a message.
+# Usage: commit_changes <message>
+commit_changes() {
+  local message="$1"
+  git -C "${TEST_WORKDIR}" add -A
+  git -C "${TEST_WORKDIR}" commit -m "${message}"
 }

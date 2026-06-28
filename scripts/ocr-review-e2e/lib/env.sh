@@ -40,16 +40,33 @@ verify_accounts() {
 gh_auth_switch() {
   local account="$1"
   require_gh
-  if ! gh auth switch --user "${account}" >/dev/null 2>&1; then
-    echo "Error: failed to switch gh account to ${account}" >&2
-    exit 1
+  local current
+  current=$(gh_active_account)
+  if [ "${current}" = "${account}" ]; then
+    return 0
   fi
-  echo "Switched gh account to ${account}" >&2
+
+  local retries=0
+  local max_retries=3
+  while [ "${retries}" -lt "${max_retries}" ]; do
+    if gh auth switch --user "${account}" >/dev/null 2>&1; then
+      echo "Switched gh account to ${account}" >&2
+      return 0
+    fi
+    retries=$((retries + 1))
+    echo "Retry ${retries}/${max_retries}: failed to switch gh account to ${account}" >&2
+    sleep 1
+  done
+
+  echo "Error: failed to switch gh account to ${account} after ${max_retries} attempts" >&2
+  exit 1
 }
 
 # Print the currently active gh account username.
 gh_active_account() {
-  gh auth status --active 2>&1 | grep -oE "account [^ ]+" | awk '{print $2}' || true
+  gh auth status --active 2>&1 | awk '/Active account: true/ { active=1 }
+       /account [^ ]+/ { match($0, /account [^ ]+/); user=substr($0, RSTART+7, RLENGTH-7); gsub(/^[ \t]+|[ \t]+$/, "", user) }
+       END { if (active) print user }'
 }
 
 # Ensure the GitHub token for the active account has repo and workflow access.

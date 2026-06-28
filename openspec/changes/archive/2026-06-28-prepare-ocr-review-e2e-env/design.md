@@ -58,12 +58,37 @@ The `ocr-review` action is verified manually in a dedicated test repository name
 scripts/ocr-review-e2e/
 ├── README.md
 ├── setup.sh              # main entry for this change
-└── lib/
-    ├── env.sh            # environment variable validation
-    ├── github.sh         # gh CLI wrappers
-    ├── repo.sh           # local clone, branch, commit, push helpers
-    └── assert.sh         # assertion helpers
+├── run-same-repo.sh      # added by verify-ocr-review-same-repo-e2e
+├── run-fork.sh           # added by verify-ocr-review-fork-pr-e2e
+├── lib/
+│   ├── env.sh            # environment variables, gh auth switch, token scopes
+│   ├── github.sh         # gh CLI wrappers for repos, PRs, branches, runs
+│   ├── repo.sh           # local clone, branch, commit, push helpers
+│   └── assert.sh         # workflow run and comment assertions
+└── tests/
+    ├── test_env.sh       # unit tests for account parsing helpers
+    ├── test_repo.sh      # unit tests for file generation helpers
+    └── run_all.sh        # test runner
 ```
+
+## Lessons Learned
+
+### Older `gh` CLI versions lack `--json` on `gh pr create`
+The initial implementation used `gh pr create --json number`, which is not supported in the installed `gh` version. We now create the PR silently and then call `gh pr view <branch> --json number` to retrieve the PR number.
+
+### Workflow run filtering differs by event type
+- `pull_request` runs are associated with the PR head branch.
+- `issue_comment` runs are associated with the base branch (`main`).
+- Because multiple issue_comment runs can exist concurrently, matching by PR title is required. PR titles must therefore be unique; we include the test branch name in the title.
+
+### `gh auth switch` can be flaky
+Added retry logic and idempotency so scripts do not fail or spam logs when the active account is already correct.
+
+### Inline review comments are not in `gh pr view --json reviews`
+Inline comments must be fetched via the API endpoint `repos/{repo}/pulls/{pr_number}/comments`. Comment presence assertions check both top-level review bodies and inline comments, including the file path.
+
+### Concurrency cancels cross-PR issue_comment runs
+The example workflow includes a `concurrency` group that cancels in-progress runs when a new comment is posted. For e2e testing, this concurrency block is removed from the deployed workflow so that each test scenario's run completes independently.
 
 ## Risks / Trade-offs
 
