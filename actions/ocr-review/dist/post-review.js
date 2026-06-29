@@ -449,7 +449,6 @@ var require_dist = __commonJS({
 var import_shared = __toESM(require_dist());
 var import_fs = require("fs");
 var RESULT_PATH = "/tmp/ocr-result.json";
-var STDERR_PATH = "/tmp/ocr-stderr.log";
 function prefixIdentifier(body, identifier) {
   if (!identifier) {
     return body;
@@ -468,15 +467,6 @@ async function main() {
     resultRaw = "";
   }
   if (!resultRaw.trim()) {
-    let body = "\u26A0\uFE0F **OpenCodeReview** produced no output.";
-    try {
-      const stderr = (0, import_fs.readFileSync)(STDERR_PATH, "utf8").trim();
-      if (stderr) {
-        body += "\n\n```\n" + stderr + "\n```";
-      }
-    } catch {
-    }
-    await (0, import_shared.createIssueComment)(repo, prNumber, token, prefixIdentifier(body, identifier));
     (0, import_shared.setOutput)("review-count", "0");
     (0, import_shared.setOutput)("inline-count", "0");
     (0, import_shared.setOutput)("summary-count", "0");
@@ -486,17 +476,12 @@ async function main() {
   let result;
   try {
     result = (0, import_shared.parseOcrOutput)(resultRaw);
-  } catch (error) {
-    let body = "\u26A0\uFE0F **OpenCodeReview** failed to parse output.";
-    try {
-      const stderr = (0, import_fs.readFileSync)(STDERR_PATH, "utf8").trim();
-      if (stderr) {
-        body += "\n\n```\n" + stderr + "\n```";
-      }
-    } catch {
-    }
-    await (0, import_shared.createIssueComment)(repo, prNumber, token, prefixIdentifier(body, identifier));
-    throw error;
+  } catch {
+    (0, import_shared.setOutput)("review-count", "0");
+    (0, import_shared.setOutput)("inline-count", "0");
+    (0, import_shared.setOutput)("summary-count", "0");
+    (0, import_shared.setOutput)("failed-count", "0");
+    return;
   }
   const comments = result.comments || [];
   const { inline, summary } = (0, import_shared.splitComments)(comments);

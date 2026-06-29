@@ -12,7 +12,6 @@ import {
 import { readFileSync } from 'fs';
 
 const RESULT_PATH = '/tmp/ocr-result.json';
-const STDERR_PATH = '/tmp/ocr-stderr.log';
 
 function prefixIdentifier(body: string, identifier: string): string {
   if (!identifier) {
@@ -35,16 +34,6 @@ async function main(): Promise<void> {
   }
 
   if (!resultRaw.trim()) {
-    let body = '⚠️ **OpenCodeReview** produced no output.';
-    try {
-      const stderr = readFileSync(STDERR_PATH, 'utf8').trim();
-      if (stderr) {
-        body += '\n\n```\n' + stderr + '\n```';
-      }
-    } catch {
-      // ignore
-    }
-    await createIssueComment(repo, prNumber, token, prefixIdentifier(body, identifier));
     setOutput('review-count', '0');
     setOutput('inline-count', '0');
     setOutput('summary-count', '0');
@@ -55,18 +44,12 @@ async function main(): Promise<void> {
   let result;
   try {
     result = parseOcrOutput(resultRaw);
-  } catch (error) {
-    let body = '⚠️ **OpenCodeReview** failed to parse output.';
-    try {
-      const stderr = readFileSync(STDERR_PATH, 'utf8').trim();
-      if (stderr) {
-        body += '\n\n```\n' + stderr + '\n```';
-      }
-    } catch {
-      // ignore
-    }
-    await createIssueComment(repo, prNumber, token, prefixIdentifier(body, identifier));
-    throw error;
+  } catch {
+    setOutput('review-count', '0');
+    setOutput('inline-count', '0');
+    setOutput('summary-count', '0');
+    setOutput('failed-count', '0');
+    return;
   }
 
   const comments = result.comments || [];
