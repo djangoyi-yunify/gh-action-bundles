@@ -211,7 +211,7 @@ run_tc_identifier() {
   fi
 
   assert_run_conclusion "${branch}" "pull_request" "success" || failed=1
-  assert_comment_contains "${pr_number}" "[OCR]" || failed=1
+  assert_comment_contains "${pr_number}" "Reviewer ID: [OCR]" || failed=1
 
   cleanup_same_repo "${pr_number}" "${branch}"
   restore_default_workflow

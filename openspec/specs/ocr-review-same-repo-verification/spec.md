@@ -74,11 +74,12 @@ The verification SHALL confirm that inline comments that cannot be posted are in
 - **THEN** the comments are posted as part of a summary issue comment
 
 ### Requirement: Identifier prefix is applied
-The verification SHALL confirm that the default `identifier` prefixes every review comment.
+The verification SHALL confirm that the default `identifier` labels every review comment on its own line.
 
 #### Scenario: Identifier defaults to `OCR`
 - **WHEN** the action runs without providing an identifier
-- **THEN** every posted comment body starts with `[OCR]`
+- **THEN** every posted comment body starts with `Reviewer ID: [OCR]` on its own line
+- **AND** the OCR-generated content begins on the next line
 
 ### Requirement: Automatic checkout can be disabled
 The verification SHALL confirm that `auto-checkout: false` skips the checkout steps.

@@ -453,7 +453,8 @@ function prefixIdentifier(body, identifier) {
   if (!identifier) {
     return body;
   }
-  return `[${identifier}] ${body}`;
+  return `Reviewer ID: [${identifier}]
+${body}`;
 }
 async function main() {
   const repo = (0, import_shared.getEnv)("GITHUB_REPOSITORY");

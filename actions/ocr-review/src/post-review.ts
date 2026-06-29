@@ -17,7 +17,7 @@ function prefixIdentifier(body: string, identifier: string): string {
   if (!identifier) {
     return body;
   }
-  return `[${identifier}] ${body}`;
+  return `Reviewer ID: [${identifier}]\n${body}`;
 }
 
 async function main(): Promise<void> {

@@ -91,7 +91,7 @@ jobs:
 5. Runs `ocr review --from <merge-base> --to <head> --format json`.
 5. Parses the JSON output and posts inline review comments via GitHub's PR review API.
 6. Comments that cannot be posted inline are included in a summary issue comment.
-7. Every comment body is prefixed with `[{identifier}] `. The identifier defaults to `OCR`.
+7. Every comment body starts with `Reviewer ID: [{identifier}]` on its own line, followed by the OCR-generated content on the next line. The identifier defaults to `OCR`.
 
 ## Multiple review actions
 
@@ -115,7 +115,7 @@ if: startsWith(github.event.comment.body, '/security review')
     ...
 ```
 
-Comments from the first workflow appear as `[OCR] ...` and comments from the second as `[Security] ...`.
+Comments from the first workflow start with `Reviewer ID: [OCR]` on their own line, and comments from the second start with `Reviewer ID: [Security]`.
 
 ## Custom rules
 
