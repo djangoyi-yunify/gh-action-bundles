@@ -17,5 +17,5 @@
       "description": "Open Code Review is an AI-powered code review CLI tool. It originated as Alibaba Group's internal official AI code review assistant — over the past two years, it has served tens of thousands of developers and identified millions of code defects."
     }
   },
-  "instructions": ["agent-rules/project.md"]
+  "instructions": ["agent-rules/project.md", "agent-rules/testing.md"]
 }
