@@ -107,3 +107,4 @@ buildAction();
 - 外部贡献者发起的 fork PR 不会自动触发 workflow，避免 secrets 泄露和 token 浪费
 - 仓库维护者可通过评论指令（如 `/ocr review`）手动触发任意 PR 的 review
 - 如需自动 review 任意 fork PR，可改用 `pull_request_target`，但必须充分理解其安全风险
+- 实测结论参见 [`docs/research/github-action-secret-access-poc.md`](docs/research/github-action-secret-access-poc.md)
