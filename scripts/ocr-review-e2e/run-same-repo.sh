@@ -10,74 +10,8 @@ source "${SCRIPT_DIR}/lib/github.sh"
 source "${SCRIPT_DIR}/lib/repo.sh"
 # shellcheck source=./lib/assert.sh
 source "${SCRIPT_DIR}/lib/assert.sh"
-
-# Default scenario groups to run.
-RUN_AUTO=true
-RUN_MANUAL=true
-RUN_MERGE_BASE=true
-RUN_CONTENT=true
-RUN_FAILURE=false
-RUN_CHECKOUT=false
-RUN_FALLBACK=false
-
-# Parse arguments.
-while [ $# -gt 0 ]; do
-  case "$1" in
-    --only)
-      shift
-      RUN_AUTO=false
-      RUN_MANUAL=false
-      RUN_MERGE_BASE=false
-      RUN_CONTENT=false
-      RUN_FAILURE=false
-      RUN_CHECKOUT=false
-      RUN_FALLBACK=false
-      while [ $# -gt 0 ] && [[ "$1" != --* ]]; do
-        case "$1" in
-          auto) RUN_AUTO=true ;;
-          manual) RUN_MANUAL=true ;;
-          merge-base) RUN_MERGE_BASE=true ;;
-          content) RUN_CONTENT=true ;;
-          failure) RUN_FAILURE=true ;;
-          checkout) RUN_CHECKOUT=true ;;
-          fallback) RUN_FALLBACK=true ;;
-          *) echo "Unknown scenario group: $1" >&2; exit 1 ;;
-        esac
-        shift
-      done
-      ;;
-    --help)
-      echo "Usage: $0 [--only auto|manual|merge-base|content|failure|checkout|fallback]"
-      exit 0
-      ;;
-    *)
-      echo "Unknown option: $1" >&2
-      exit 1
-      ;;
-  esac
-done
-
-# Track failures.
-FAILED_SCENARIOS=()
-
-scenario_start() {
-  local name="$1"
-  echo ""
-  echo "=========================================="
-  echo "Scenario: ${name}"
-  echo "=========================================="
-}
-
-scenario_pass() {
-  local name="$1"
-  echo "✓ Scenario passed: ${name}"
-}
-
-scenario_fail() {
-  local name="$1"
-  echo "✗ Scenario failed: ${name}" >&2
-  FAILED_SCENARIOS+=("${name}")
-}
+# shellcheck source=./lib/runner.sh
+source "${SCRIPT_DIR}/lib/runner.sh"
 
 # Create a same-repo PR with the given branch name and title.
 # Usage: create_same_repo_pr <branch> <title>
@@ -106,7 +40,6 @@ restore_default_workflow() {
 
 # Scenario: OWNER opens same-repo PR, workflow runs and posts comments.
 run_tc_auto_owner() {
-  scenario_start "tc-auto-owner"
   local branch="tc-auto-owner-$(date +%s)"
   local pr_number
 
@@ -118,25 +51,21 @@ run_tc_auto_owner() {
   echo "Created PR #${pr_number}"
 
   wait_for_run "${branch}" "pull_request" 300
-  assert_run_conclusion "${branch}" "pull_request" "success" || { scenario_fail "tc-auto-owner"; return; }
-  assert_has_comments "${pr_number}" || { scenario_fail "tc-auto-owner"; return; }
+  assert_run_conclusion "${branch}" "pull_request" "success" || return 1
+  assert_has_comments "${pr_number}" || return 1
 
   cleanup_same_repo "${pr_number}" "${branch}"
-  scenario_pass "tc-auto-owner"
 }
 
 # Scenario: untrusted same-repo PR is skipped.
 # Note: this requires a third account with read access to the base repo.
 run_tc_auto_untrusted() {
-  scenario_start "tc-auto-untrusted"
   echo "Skipping: same-repo PR from an untrusted author requires a third GitHub account"
   echo "         with read access to ${BASE_REPO}. Configure UNTRUSTED_ACCOUNT env var to enable."
-  scenario_pass "tc-auto-untrusted (skipped)"
 }
 
 # Scenario: OWNER comments /ocr review, workflow runs and posts comments.
 run_tc_manual_owner() {
-  scenario_start "tc-manual-owner"
   local branch="tc-manual-owner-$(date +%s)"
   local pr_number
   local title="test(manual): same-repo PR for /ocr review (${branch})"
@@ -152,24 +81,20 @@ run_tc_manual_owner() {
   echo "Posted /ocr review comment"
 
   wait_for_run "${branch}" "issue_comment" 300 "${title}"
-  assert_run_conclusion "${branch}" "issue_comment" "success" "${title}" || { scenario_fail "tc-manual-owner"; return; }
-  assert_has_comments "${pr_number}" || { scenario_fail "tc-manual-owner"; return; }
+  assert_run_conclusion "${branch}" "issue_comment" "success" "${title}" || return 1
+  assert_has_comments "${pr_number}" || return 1
 
   cleanup_same_repo "${pr_number}" "${branch}"
-  scenario_pass "tc-manual-owner"
 }
 
 # Scenario: untrusted user comments /ocr review, workflow is skipped.
 # Skipped in this change: requires a dedicated untrusted same-repo account.
 run_tc_manual_untrusted() {
-  scenario_start "tc-manual-untrusted"
   echo "Skipping: untrusted same-repo commenter scenario is deferred to fork-PR verification"
-  scenario_pass "tc-manual-untrusted (skipped)"
 }
 
 # Scenario: comment not starting with /ocr review does not trigger workflow.
 run_tc_manual_wrong_text() {
-  scenario_start "tc-manual-wrong-text"
   local branch="tc-manual-wrong-text-$(date +%s)"
   local pr_number
   local title="test(manual): same-repo PR for wrong comment text (${branch})"
@@ -187,15 +112,13 @@ run_tc_manual_wrong_text() {
   # The workflow is triggered by any issue_comment event, but the job should be
   # skipped because the comment does not start with /ocr review.
   wait_for_run "${branch}" "issue_comment" 60 "${title}"
-  assert_run_conclusion "${branch}" "issue_comment" "skipped" "${title}" || { scenario_fail "tc-manual-wrong-text"; return; }
+  assert_run_conclusion "${branch}" "issue_comment" "skipped" "${title}" || return 1
 
   cleanup_same_repo "${pr_number}" "${branch}"
-  scenario_pass "tc-manual-wrong-text"
 }
 
 # Scenario: main advances after PR creation, merge-base is still correct.
 run_tc_merge_base() {
-  scenario_start "tc-merge-base"
   local branch="tc-merge-base-$(date +%s)"
   local pr_number
   local title="test(merge-base): verify merge-base calculation (${branch})"
@@ -221,17 +144,15 @@ PY
 
   post_comment "${pr_number}" "/ocr review"
   wait_for_run "${branch}" "issue_comment" 300 "${title}"
-  assert_run_conclusion "${branch}" "issue_comment" "success" "${title}" || { scenario_fail "tc-merge-base"; return; }
-  assert_has_comments "${pr_number}" || { scenario_fail "tc-merge-base"; return; }
-  assert_comment_not_contains "${pr_number}" "unrelated advancement" || { scenario_fail "tc-merge-base"; return; }
+  assert_run_conclusion "${branch}" "issue_comment" "success" "${title}" || return 1
+  assert_has_comments "${pr_number}" || return 1
+  assert_comment_not_contains "${pr_number}" "unrelated advancement" || return 1
 
   cleanup_same_repo "${pr_number}" "${branch}"
-  scenario_pass "tc-merge-base"
 }
 
 # Scenario: PR adds a new file, OCR reviews it.
 run_tc_new_file() {
-  scenario_start "tc-new-file"
   local branch="tc-new-file-$(date +%s)"
   local pr_number
 
@@ -243,17 +164,15 @@ run_tc_new_file() {
   echo "Created PR #${pr_number}"
 
   wait_for_run "${branch}" "pull_request" 300
-  assert_run_conclusion "${branch}" "pull_request" "success" || { scenario_fail "tc-new-file"; return; }
-  assert_has_comments "${pr_number}" || { scenario_fail "tc-new-file"; return; }
-  assert_comment_contains "${pr_number}" "feature.py" || { scenario_fail "tc-new-file"; return; }
+  assert_run_conclusion "${branch}" "pull_request" "success" || return 1
+  assert_has_comments "${pr_number}" || return 1
+  assert_comment_contains "${pr_number}" "feature.py" || return 1
 
   cleanup_same_repo "${pr_number}" "${branch}"
-  scenario_pass "tc-new-file"
 }
 
 # Scenario: PR modifies an existing file, OCR reviews it.
 run_tc_modify_existing() {
-  scenario_start "tc-modify-existing"
   local branch="tc-modify-existing-$(date +%s)"
   local pr_number
 
@@ -265,17 +184,15 @@ run_tc_modify_existing() {
   echo "Created PR #${pr_number}"
 
   wait_for_run "${branch}" "pull_request" 300
-  assert_run_conclusion "${branch}" "pull_request" "success" || { scenario_fail "tc-modify-existing"; return; }
-  assert_has_comments "${pr_number}" || { scenario_fail "tc-modify-existing"; return; }
-  assert_comment_contains "${pr_number}" "main.py" || { scenario_fail "tc-modify-existing"; return; }
+  assert_run_conclusion "${branch}" "pull_request" "success" || return 1
+  assert_has_comments "${pr_number}" || return 1
+  assert_comment_contains "${pr_number}" "main.py" || return 1
 
   cleanup_same_repo "${pr_number}" "${branch}"
-  scenario_pass "tc-modify-existing"
 }
 
 # Scenario: identifier prefix is applied.
 run_tc_identifier() {
-  scenario_start "tc-identifier"
   local branch="tc-identifier-$(date +%s)"
   local pr_number
   local failed=0
@@ -299,16 +216,11 @@ run_tc_identifier() {
   cleanup_same_repo "${pr_number}" "${branch}"
   restore_default_workflow
 
-  if [ "${failed}" -eq 0 ]; then
-    scenario_pass "tc-identifier"
-  else
-    scenario_fail "tc-identifier"
-  fi
+  return "${failed}"
 }
 
 # Scenario: auto-checkout disabled.
 run_tc_auto_checkout_false() {
-  scenario_start "tc-auto-checkout-false"
   local branch="tc-auto-checkout-false-$(date +%s)"
   local pr_number
   local failed=0
@@ -332,16 +244,11 @@ run_tc_auto_checkout_false() {
   cleanup_same_repo "${pr_number}" "${branch}"
   restore_default_workflow
 
-  if [ "${failed}" -eq 0 ]; then
-    scenario_pass "tc-auto-checkout-false"
-  else
-    scenario_fail "tc-auto-checkout-false"
-  fi
+  return "${failed}"
 }
 
 # Scenario: OCR CLI fails gracefully.
 run_tc_ocr_failure() {
-  scenario_start "tc-ocr-failure"
   local branch="tc-ocr-failure-$(date +%s)"
   local pr_number
   local failed=0
@@ -366,16 +273,11 @@ run_tc_ocr_failure() {
   cleanup_same_repo "${pr_number}" "${branch}"
   restore_default_workflow
 
-  if [ "${failed}" -eq 0 ]; then
-    scenario_pass "tc-ocr-failure"
-  else
-    scenario_fail "tc-ocr-failure"
-  fi
+  return "${failed}"
 }
 
 # Scenario: inline comments fallback to summary.
 run_tc_inline_fallback() {
-  scenario_start "tc-inline-fallback"
   local branch="tc-inline-fallback-$(date +%s)"
   local pr_number
   local title="test(fallback): inline comment fallback (${branch})"
@@ -423,66 +325,25 @@ PY
   cleanup_same_repo "${pr_number}" "${branch}"
   restore_default_workflow
 
-  if [ "${failed}" -eq 0 ]; then
-    scenario_pass "tc-inline-fallback"
-  else
-    scenario_fail "tc-inline-fallback"
-  fi
+  return "${failed}"
 }
 
-# Run all enabled scenario groups.
-main() {
-  echo "Running same-repo e2e verification"
-  echo "Base repo: ${BASE_REPO}"
+# Register all same-repo scenarios.
+register_scenario "tc-auto-owner" "auto" "OWNER opens same-repo PR; workflow runs and posts comments" "" run_tc_auto_owner
+register_scenario "tc-auto-untrusted" "auto" "Untrusted same-repo PR is skipped (requires third account)" "" run_tc_auto_untrusted
+register_scenario "tc-manual-owner" "manual" "OWNER comments /ocr review; workflow runs and posts comments" "" run_tc_manual_owner
+register_scenario "tc-manual-untrusted" "manual" "Untrusted user comments /ocr review; workflow is skipped" "" run_tc_manual_untrusted
+register_scenario "tc-manual-wrong-text" "manual" "Comment not starting with /ocr review does not trigger workflow" "" run_tc_manual_wrong_text
+register_scenario "tc-merge-base" "merge-base" "Main advances after PR creation; merge-base is still correct" "" run_tc_merge_base
+register_scenario "tc-new-file" "content" "PR adds a new file; OCR reviews it" "" run_tc_new_file
+register_scenario "tc-modify-existing" "content" "PR modifies an existing file; OCR reviews it" "" run_tc_modify_existing
+register_scenario "tc-identifier" "content" "Identifier prefix [OCR] is applied" "" run_tc_identifier
+register_scenario "tc-auto-checkout-false" "checkout" "Auto-checkout disabled; caller provides checkout" "" run_tc_auto_checkout_false
+register_scenario "tc-ocr-failure" "failure" "OCR CLI fails gracefully" "" run_tc_ocr_failure
+register_scenario "tc-inline-fallback" "fallback" "Inline comments fallback to summary" "" run_tc_inline_fallback
 
-  verify_accounts
-  prepare_local_clone
+# Default groups mirror the original run-same-repo.sh behavior.
+runner_set_default_groups auto manual merge-base content
 
-  if [ "${RUN_AUTO}" = true ]; then
-    run_tc_auto_owner || true
-    run_tc_auto_untrusted || true
-  fi
-
-  if [ "${RUN_MANUAL}" = true ]; then
-    run_tc_manual_owner || true
-    run_tc_manual_untrusted || true
-    run_tc_manual_wrong_text || true
-  fi
-
-  if [ "${RUN_MERGE_BASE}" = true ]; then
-    run_tc_merge_base || true
-  fi
-
-  if [ "${RUN_CONTENT}" = true ]; then
-    run_tc_new_file || true
-    run_tc_modify_existing || true
-    run_tc_identifier || true
-  fi
-
-  if [ "${RUN_FAILURE}" = true ]; then
-    run_tc_ocr_failure || true
-  fi
-
-  if [ "${RUN_FALLBACK}" = true ]; then
-    run_tc_inline_fallback || true
-  fi
-
-  if [ "${RUN_CHECKOUT}" = true ]; then
-    run_tc_auto_checkout_false || true
-  fi
-
-  echo ""
-  echo "=========================================="
-  if [ ${#FAILED_SCENARIOS[@]} -eq 0 ]; then
-    echo "All enabled scenarios passed"
-  else
-    echo "Failed scenarios:"
-    for s in "${FAILED_SCENARIOS[@]}"; do
-      echo "  - ${s}"
-    done
-    exit 1
-  fi
-  echo "=========================================="
-}
-
-main "$@"
+# Run everything through the shared runner.
+runner_main "$@"

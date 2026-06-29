@@ -132,14 +132,32 @@ assert_has_comments() {
   echo "Asserted PR #${pr_number} has ${count} comment(s)"
 }
 
+# Assert that a PR has no comments or inline review comments.
+# Usage: assert_no_comments <pr_number>
+assert_no_comments() {
+  local pr_number="$1"
+  local count
+  count=$(count_matching_comments "${pr_number}" "")
+  if [ "${count}" -ne 0 ]; then
+    echo "Error: expected PR #${pr_number} to have no comments, found ${count}" >&2
+    return 1
+  fi
+  echo "Asserted PR #${pr_number} has no comments"
+}
+
 # Assert that a workflow run log contains a substring.
 # Usage: assert_run_log_contains <run_id> <substring>
 assert_run_log_contains() {
   local run_id="$1"
   local substring="$2"
-  if ! view_run_logs "${run_id}" | grep -q "${substring}"; then
+  local tmp_log
+  tmp_log=$(mktemp)
+  view_run_logs "${run_id}" > "${tmp_log}"
+  if ! grep -q "${substring}" "${tmp_log}"; then
+    rm -f "${tmp_log}"
     echo "Error: run ${run_id} log does not contain '${substring}'" >&2
     return 1
   fi
+  rm -f "${tmp_log}"
   echo "Asserted run ${run_id} log contains '${substring}'"
 }

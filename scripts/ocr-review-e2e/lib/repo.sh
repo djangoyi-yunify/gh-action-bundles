@@ -133,6 +133,37 @@ commit_changes() {
   git -C "${TEST_WORKDIR}" commit -m "${message}"
 }
 
+# Ensure the fork remote is configured in the local clone.
+# Usage: prepare_fork_remote
+prepare_fork_remote() {
+  gh_auth_switch "${BASE_OWNER}"
+  git -C "${TEST_WORKDIR}" checkout "${TEST_BASE_BRANCH}"
+  git -C "${TEST_WORKDIR}" pull origin "${TEST_BASE_BRANCH}"
+  if ! git -C "${TEST_WORKDIR}" remote get-url fork >/dev/null 2>&1; then
+    echo "Adding fork remote: ${FORK_REPO}"
+    git -C "${TEST_WORKDIR}" remote add fork "https://github.com/${FORK_REPO}.git"
+  fi
+  git -C "${TEST_WORKDIR}" fetch fork
+}
+
+# Create a branch in the local clone that will be pushed to the fork.
+# Usage: create_fork_branch <branch-name>
+create_fork_branch() {
+  local branch="$1"
+  gh_auth_switch "${FORK_OWNER}"
+  git -C "${TEST_WORKDIR}" checkout "${TEST_BASE_BRANCH}"
+  git -C "${TEST_WORKDIR}" pull origin "${TEST_BASE_BRANCH}"
+  git -C "${TEST_WORKDIR}" checkout -b "${branch}"
+}
+
+# Push the current branch to the fork remote.
+# Usage: push_fork_branch <branch-name>
+push_fork_branch() {
+  local branch="$1"
+  gh_auth_switch "${FORK_OWNER}"
+  git -C "${TEST_WORKDIR}" push fork "${branch}"
+}
+
 # Copy an extra file into the test repo, commit, and push it to the base branch.
 # Useful for deploying custom OCR rule files or other test fixtures.
 # Usage: deploy_test_fixture <source_file> <dest_path_in_repo> <commit_message>

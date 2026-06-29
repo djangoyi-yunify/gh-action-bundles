@@ -96,6 +96,45 @@ create_pr() {
   gh pr view "${head_branch}" --repo "${BASE_REPO}" --json number --jq '.number'
 }
 
+# Create a cross-repo pull request from the fork. Returns the PR number.
+# Usage: create_cross_repo_pr <title> <body> <fork-branch> <base-branch>
+create_cross_repo_pr() {
+  local title="$1"
+  local body="$2"
+  local fork_branch="$3"
+  local base_branch="${4:-${TEST_BASE_BRANCH}}"
+  gh_auth_switch "${FORK_OWNER}"
+  gh pr create --repo "${BASE_REPO}" --title "${title}" --body "${body}" --base "${base_branch}" --head "${FORK_OWNER}:${fork_branch}" >/dev/null 2>&1
+  gh pr view "${FORK_OWNER}:${fork_branch}" --repo "${BASE_REPO}" --json number --jq '.number'
+}
+
+# Approve the latest pull_request workflow run for a head branch if it is in
+# the `action_required` state (common for first-time contributor fork PRs).
+# Usage: approve_pull_request_run_if_needed <head_branch>
+approve_pull_request_run_if_needed() {
+  local head_branch="$1"
+  gh_auth_switch "${BASE_OWNER}"
+  local run_id
+  run_id=$(get_latest_run_id_any "${head_branch}" "pull_request")
+  if [ -z "${run_id}" ]; then
+    return 0
+  fi
+  local conclusion
+  conclusion=$(gh run view "${run_id}" --repo "${BASE_REPO}" --json conclusion --jq '.conclusion')
+  if [ "${conclusion}" = "action_required" ]; then
+    echo "Workflow run ${run_id} requires approval; approving..."
+    approve_workflow_run "${run_id}"
+  fi
+}
+
+# Approve a pending workflow run (e.g., for first-time contributors).
+# Usage: approve_workflow_run <run_id>
+approve_workflow_run() {
+  local run_id="$1"
+  gh_auth_switch "${BASE_OWNER}"
+  gh api "repos/${BASE_REPO}/actions/runs/${run_id}/approve" --method POST
+}
+
 # Post a comment on a PR or issue.
 # Usage: post_comment <pr_number> <body>
 post_comment() {
