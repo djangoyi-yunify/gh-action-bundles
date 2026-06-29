@@ -215,11 +215,11 @@ count_matching_comments() {
   gh_auth_switch "${BASE_OWNER}"
   local count=0
   # Issue comments on the PR
-  count=$((count + $(gh pr view "${pr_number}" --repo "${BASE_REPO}" --json comments --jq '.comments[].body' 2>/dev/null | grep -c "${substring}" || true)))
+  count=$((count + $(gh pr view "${pr_number}" --repo "${BASE_REPO}" --json comments --jq '.comments[].body' 2>/dev/null | grep -cF "${substring}" || true)))
   # Review comments (top-level review bodies)
-  count=$((count + $(gh pr view "${pr_number}" --repo "${BASE_REPO}" --json reviews --jq '.reviews[].body' 2>/dev/null | grep -c "${substring}" || true)))
+  count=$((count + $(gh pr view "${pr_number}" --repo "${BASE_REPO}" --json reviews --jq '.reviews[].body' 2>/dev/null | grep -cF "${substring}" || true)))
   # Inline review comments (body and path)
-  count=$((count + $(gh api "repos/${BASE_REPO}/pulls/${pr_number}/comments" --jq '.[] | "\(.path) \(.body)"' 2>/dev/null | grep -c "${substring}" || true)))
+  count=$((count + $(gh api "repos/${BASE_REPO}/pulls/${pr_number}/comments" --jq '.[] | "\(.path) \(.body)"' 2>/dev/null | grep -cF "${substring}" || true)))
   echo "${count}"
 }
 
