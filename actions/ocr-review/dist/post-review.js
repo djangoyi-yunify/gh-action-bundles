@@ -459,7 +459,7 @@ async function main() {
   const repo = (0, import_shared.getEnv)("GITHUB_REPOSITORY");
   const prNumber = parseInt((0, import_shared.getEnv)("PR_NUMBER"), 10);
   const token = (0, import_shared.getEnv)("GITHUB_TOKEN");
-  const identifier = (0, import_shared.getEnv)("IDENTIFIER", false) || "";
+  const identifier = (0, import_shared.getEnv)("IDENTIFIER", false) || "OCR";
   let resultRaw = "";
   try {
     resultRaw = (0, import_fs.readFileSync)(RESULT_PATH, "utf8");

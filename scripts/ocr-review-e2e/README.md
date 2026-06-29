@@ -74,7 +74,7 @@ scripts/ocr-review-e2e/
 │   └── inline-fallback-rule.json  # custom rule for tc-inline-fallback
 └── workflows/
     ├── ocr-review-failure.yml            # workflow variant with invalid LLM credentials
-    ├── ocr-review-identifier.yml         # workflow variant with identifier
+    ├── ocr-review-identifier.yml         # workflow variant relying on default identifier
     ├── ocr-review-auto-checkout-false.yml # workflow variant with auto-checkout: false
     └── ocr-review-inline-fallback.yml    # workflow variant for inline fallback
 ```

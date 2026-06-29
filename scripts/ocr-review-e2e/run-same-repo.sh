@@ -191,7 +191,7 @@ run_tc_modify_existing() {
   cleanup_same_repo "${pr_number}" "${branch}"
 }
 
-# Scenario: identifier prefix is applied.
+# Scenario: default identifier prefix is applied.
 run_tc_identifier() {
   local branch="tc-identifier-$(date +%s)"
   local pr_number
@@ -201,9 +201,9 @@ run_tc_identifier() {
 
   create_test_branch "${branch}"
   write_main_py_with_bugs
-  commit_changes "test(identifier): same-repo PR with identifier"
+  commit_changes "test(identifier): same-repo PR with default identifier"
   push_test_branch "${branch}"
-  pr_number=$(create_pr "test(identifier): comment prefix [OCR] (${branch})" "E2E identifier scenario" "${branch}" "${TEST_BASE_BRANCH}")
+  pr_number=$(create_pr "test(identifier): default comment prefix [OCR] (${branch})" "E2E default identifier scenario" "${branch}" "${TEST_BASE_BRANCH}")
   echo "Created PR #${pr_number}"
 
   if ! wait_for_run "${branch}" "pull_request" 300; then

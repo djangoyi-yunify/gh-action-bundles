@@ -32,5 +32,4 @@ jobs:
           llm-token: ${{ secrets.OCR_LLM_AUTH_TOKEN }}
           llm-model: ${{ secrets.OCR_LLM_MODEL }}
           pr-number: ${{ github.event.pull_request.number || github.event.issue.number }}
-          identifier: OCR
           background: ${{ github.event.pull_request.title }}

@@ -70,7 +70,7 @@ jobs:
 | `concurrency` | no | `8` | Max concurrent file reviews |
 | `timeout` | no | `10` | Concurrent task timeout in minutes |
 | `background` | no | - | Optional business/requirement context for the review |
-| `identifier` | no | - | Optional identifier prepended to review comments to distinguish multiple review actions |
+| `identifier` | no | `OCR` | Identifier prepended to review comments to distinguish multiple review actions |
 | `auto-checkout` | no | `true` | Let the action checkout the repository and PR head branch; set to `false` if the caller already checked out the code |
 
 ## Outputs
@@ -91,7 +91,7 @@ jobs:
 5. Runs `ocr review --from <merge-base> --to <head> --format json`.
 5. Parses the JSON output and posts inline review comments via GitHub's PR review API.
 6. Comments that cannot be posted inline are included in a summary issue comment.
-7. If `identifier` is provided, every comment body is prefixed with `[{identifier}] `.
+7. Every comment body is prefixed with `[{identifier}] `. The identifier defaults to `OCR`.
 
 ## Multiple review actions
 

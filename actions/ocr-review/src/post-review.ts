@@ -24,7 +24,7 @@ async function main(): Promise<void> {
   const repo = getEnv('GITHUB_REPOSITORY');
   const prNumber = parseInt(getEnv('PR_NUMBER'), 10);
   const token = getEnv('GITHUB_TOKEN');
-  const identifier = getEnv('IDENTIFIER', false) || '';
+  const identifier = getEnv('IDENTIFIER', false) || 'OCR';
 
   let resultRaw = '';
   try {
