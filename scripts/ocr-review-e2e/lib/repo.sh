@@ -49,10 +49,9 @@ deploy_workflow() {
   git -C "${TEST_WORKDIR}" checkout "${TEST_BASE_BRANCH}"
   git -C "${TEST_WORKDIR}" pull origin "${TEST_BASE_BRANCH}"
   mkdir -p "${TEST_WORKDIR}/.github/workflows"
-  # Replace placeholder owner with the actual action repo owner.
+  # Source workflow files are expected to contain the real action repo owner.
   # Remove concurrency config to avoid test runs cancelling each other.
-  sed -e "s|your-org/gh-action-bundles|${BASE_OWNER}/gh-action-bundles|g" \
-      -e '/^concurrency:/,/^  cancel-in-progress: true$/d' \
+  sed -e '/^concurrency:/,/^  cancel-in-progress: true$/d' \
       "${source_file}" > "${TEST_WORKDIR}/${WORKFLOW_FILE}"
   git -C "${TEST_WORKDIR}" add "${WORKFLOW_FILE}"
   if git -C "${TEST_WORKDIR}" diff --cached --quiet; then

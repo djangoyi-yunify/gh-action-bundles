@@ -16,7 +16,7 @@ jobs:
       github.event.pull_request.author_association == 'OWNER'
     steps:
       - name: Run OCR review with invalid LLM credentials
-        uses: your-org/gh-action-bundles/actions/ocr-review@main
+        uses: djangoyi-yunify/gh-action-bundles/actions/ocr-review@main
         with:
           llm-url: http://localhost:59999/invalid-llm-endpoint
           llm-token: invalid-token-for-e2e-test

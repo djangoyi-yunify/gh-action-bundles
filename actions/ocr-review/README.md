@@ -44,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run OCR review
-        uses: your-org/gh-action-bundles/actions/ocr-review@main
+        uses: djangoyi-yunify/gh-action-bundles/actions/ocr-review@main
         with:
           identifier: OCR
           llm-url: ${{ secrets.OCR_LLM_URL }}
@@ -101,7 +101,7 @@ If you run several review actions in the same repository, give each one a distin
 # .github/workflows/ocr-review.yml
 if: startsWith(github.event.comment.body, '/ocr review')
 ...
-- uses: your-org/gh-action-bundles/actions/ocr-review@main
+- uses: djangoyi-yunify/gh-action-bundles/actions/ocr-review@main
   with:
     identifier: OCR
     ...
@@ -109,7 +109,7 @@ if: startsWith(github.event.comment.body, '/ocr review')
 # .github/workflows/security-review.yml
 if: startsWith(github.event.comment.body, '/security review')
 ...
-- uses: your-org/gh-action-bundles/actions/ocr-review@main
+- uses: djangoyi-yunify/gh-action-bundles/actions/ocr-review@main
   with:
     identifier: Security
     ...
@@ -122,7 +122,7 @@ Comments from the first workflow start with `Reviewer ID: [OCR]` on their own li
 Place a rule file at `.opencodereview/rule.json` in your repository, or pass a custom path via `rule-path`:
 
 ```yaml
-- uses: your-org/gh-action-bundles/actions/ocr-review@main
+- uses: djangoyi-yunify/gh-action-bundles/actions/ocr-review@main
   with:
     rule-path: .github/ocr-rules.json
 ```
